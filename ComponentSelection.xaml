@@ -18,7 +18,7 @@
         <ListBox x:Name="fixListBox" HorizontalAlignment="Center" VerticalAlignment="Top" Width="720" Height="230" Margin="0,130,0,0" Background="Transparent">
             <CheckBox x:Name="driversCheckbox" Content="Drivers" Margin="33,0,0,0" FontFamily="Segoe UI Variable Text" IsChecked="True"/>
             <TreeView Margin="-15,-19,0,0" FontFamily="Segoe UI Variable Text">
-                <TreeViewItem x:Name="Applications">
+                <TreeViewItem x:Name="Applications" IsExpanded="True">
                         <TreeViewItem.Header>
                             <CheckBox x:Name="applicationsCheckbox" Content="Applications" FontFamily="Segoe UI Variable Text" IsChecked="True" IsThreeState="True"/>
                         </TreeViewItem.Header>
@@ -28,7 +28,7 @@
         </ListBox>
         <Label x:Name="etaLabel" Content="Estimated time required: 5 min" Margin="40,0,0,165" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontFamily="Segoe UI Variable Text"/>
         <Label x:Name="onlineOfflineLabel" Content="OS Recovery will attempt to download required files from the server." Margin="40,0,0,140" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontFamily="Segoe UI Variable Text"/>
-        <CheckBox x:Name="cleanupCheckbox" Content="Clean up all setup files when complete" VerticalAlignment="Bottom" Margin="40,0,0,100" FontFamily="Segoe UI Variable Text" IsChecked="True"/>
+        <CheckBox x:Name="cleanupCheckbox" Content="Clean up all setup files when complete" VerticalAlignment="Bottom" Margin="40,0,0,100" FontFamily="Segoe UI Variable Text" IsChecked="True" Checked="cleanupCheckbox_Checked" Unchecked="cleanupCheckbox_Unchecked"/>
         <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,0,55" Height="42">
             <Button x:Name="startButton" Content="Start" Width="120" Height="32" VerticalAlignment="Bottom" Margin="0,0,10,0" Style="{DynamicResource AccentButtonStyle}" FontFamily="Segoe UI Variable Text" Click="startButton_Click"/>
             <Button Content="Cancel" Width="120" Height="32" VerticalAlignment="Bottom" Margin="0,0,30,0" FontFamily="Segoe UI Variable Text"/>

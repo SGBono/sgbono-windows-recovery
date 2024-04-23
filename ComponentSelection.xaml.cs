@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Management;
@@ -53,9 +54,35 @@ namespace beforewindeploy_custom_recovery
             await Task.Delay(ms);
         }
 
-        private List<string> thingsToDo = new List<string>();
-        private char localDriveLetter;
+        class FixTask
+        {
+            readonly string id;
+            readonly string name;
+            bool isSelected = false;
 
+            public FixTask(string id, string name)
+            {
+                this.id = id;
+                this.name = name;
+            }
+        }
+
+        private List<string> thingsToDo = new List<string>();
+        private Dictionary<string, List<FixTask>> tasks = new Dictionary<string, List<FixTask>>();
+
+        /**
+         * {
+         * 
+         * "Applications": [
+         *  FixTask("1", "Google Chrome")
+         * ],
+         * }
+         * 
+         * Applications indeterminate "-" means that list of tasks mapped to isSelected some is true
+         * 
+         * 
+         **/
+        private char localDriveLetter;
         private async void ConnectToWiFi()
         {
             bool networkDone = false;
@@ -208,7 +235,11 @@ namespace beforewindeploy_custom_recovery
             }
 
             XDocument programsList = XDocument.Load(path);
-            
+
+
+            // Declare an array of booleans for checkbox bindings
+            bool[] checkboxBindings = new bool[programsList.Root.Elements().Count()];
+
             foreach (var element in programsList.Root.Elements())
             {
                 string programName = element.Element("name").Value;
@@ -238,18 +269,25 @@ namespace beforewindeploy_custom_recovery
                     thingsToDo.Add(Convert.ToString(checkBox.Content));
                     checkBox.Checked += (object sender, RoutedEventArgs e) =>
                     {
-                        if (checkBox.IsChecked == true)
+                        thingsToDo.Add(Convert.ToString(checkBox.Content));
+                    };
+                    checkBox.Unchecked += (object sender, RoutedEventArgs e) =>
+                    {
+                        if (thingsToDo.Contains(Convert.ToString(checkBox.Content)))
                         {
-                            thingsToDo.Add(Convert.ToString(checkBox.Content));
-                        }
-                        else
-                        {
-                            if (thingsToDo.Contains(Convert.ToString(checkBox.Content)))
-                            {
-                                thingsToDo.Remove(Convert.ToString(checkBox.Content));
-                            }
+                            thingsToDo.Remove(Convert.ToString(checkBox.Content));
                         }
                     };
+
+                    // Get the index of the current checkbox
+                    int checkboxIndex = Applications.Items.Count;
+
+                    // Bind the checkbox to the corresponding boolean in the array
+                    Binding binding = new Binding("IsChecked");
+                    binding.Source = checkboxBindings;
+                    binding.Mode = BindingMode.TwoWay;
+                    binding.Converter = new IndexToBooleanConverter(checkboxIndex); // Custom converter to convert index to boolean
+                    checkBox.SetBinding(CheckBox.IsCheckedProperty, binding);
 
                     TreeViewItem treeViewItem = new TreeViewItem();
                     treeViewItem.Header = checkBox;
@@ -257,6 +295,60 @@ namespace beforewindeploy_custom_recovery
                     Applications.Items.Add(treeViewItem);
                 }
             }
+
+
+
+
+            /*foreach (var element in programsList.Root.Elements())
+            {
+                string programName = element.Element("name").Value;
+                bool isProgramFound = false;
+
+                foreach (var subkeyName in uninstallKey.GetSubKeyNames())
+                {
+                    using (var subKey = uninstallKey.OpenSubKey(subkeyName))
+                    {
+                        var displayName = Convert.ToString(subKey.GetValue("DisplayName"));
+                        if (displayName.Contains(programName))
+                        {
+                            isProgramFound = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!isProgramFound)
+                {
+                    CheckBox checkBox = new CheckBox
+                    {
+                        Content = programName,
+                        FontFamily = new FontFamily("Segoe UI Variable Text"),
+                        IsChecked = true
+                    };
+                    thingsToDo.Add(Convert.ToString(checkBox.Content));
+                    checkBox.Checked += (object sender, RoutedEventArgs e) =>
+                    {
+                        thingsToDo.Add(Convert.ToString(checkBox.Content));
+                    };
+                    checkBox.Unchecked += (object sender, RoutedEventArgs e) =>
+                    {
+                        if (thingsToDo.Contains(Convert.ToString(checkBox.Content)))
+                        {
+                            thingsToDo.Remove(Convert.ToString(checkBox.Content));
+                        }
+                    };
+
+                    Binding binding = new Binding("IsChecked");
+                    binding.Source = applicationsCheckbox;
+                    binding.Mode = BindingMode.TwoWay;
+                    checkBox.SetBinding(CheckBox.IsCheckedProperty, binding);
+
+                    TreeViewItem treeViewItem = new TreeViewItem();
+                    treeViewItem.Header = checkBox;
+
+                    Applications.Items.Add(treeViewItem);
+                }
+            }*/
             this.Visibility = Visibility.Visible;
             List<string> ApplicationsToDo = thingsToDo;
             ApplicationsToDo.Remove("Drivers");
@@ -308,6 +400,23 @@ namespace beforewindeploy_custom_recovery
         private void startButton_Click(object sender, RoutedEventArgs e)
         {
 
+        }
+
+        private void cleanupCheckbox_Checked(object sender, RoutedEventArgs e)
+        {
+            thingsToDo.Add("Cleanup");
+        }
+
+        private void cleanupCheckbox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            var result = iNKORE.UI.WPF.Modern.Controls.MessageBox.Show("Unchecking this may seriously compromise our operational security. You should NOT turn this off except for debugging purposes approved by the app developers. Are you sure you want to do this?", "Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (result == MessageBoxResult.No)
+            {
+                cleanupCheckbox.IsChecked = true;
+            } else if (result == MessageBoxResult.Yes)
+            {
+                thingsToDo.Remove("Cleanup");
+            }
         }
     }
 }
