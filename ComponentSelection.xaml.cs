@@ -54,6 +54,7 @@ namespace beforewindeploy_custom_recovery
         }
 
         private List<string> thingsToDo = new List<string>();
+        private char localDriveLetter;
 
         private async void ConnectToWiFi()
         {
@@ -128,11 +129,8 @@ namespace beforewindeploy_custom_recovery
         {
             InitializeComponent();
             this.Visibility = Visibility.Hidden;
-            driversCheckbox.Visibility = Visibility.Hidden;
-            applicationsCheckbox.Visibility = Visibility.Collapsed;
-            libreofficeCheckbox.Visibility = Visibility.Collapsed;
-            teamsCheckbox.Visibility = Visibility.Collapsed;
-            zoomCheckbox.Visibility = Visibility.Collapsed;
+            driversCheckbox.Visibility = Visibility.Collapsed;
+            Applications.Visibility = Visibility.Collapsed;
             Main2();
         }
 
@@ -142,6 +140,7 @@ namespace beforewindeploy_custom_recovery
             {
                 await Delay(500);
                 //GPU driver detection (Assuming that if GPU driver is present, all drivers are present)
+                bool driversPresent = true;
                 using (var searcher1 = new ManagementObjectSearcher("select * from Win32_VideoController"))
                 {
                     foreach (ManagementObject obj in searcher1.Get())
@@ -149,19 +148,26 @@ namespace beforewindeploy_custom_recovery
                         if (obj["Name"].ToString() == "Microsoft Basic Display Adapter")
                         {
                             driversCheckbox.Visibility = Visibility.Visible;
+                            driversPresent = false;
                             break;
                         }
                     }
                 }
 
+                if(driversPresent == true)
+                {
+                    fixListBox.Items.Remove(driversCheckbox);
+                }
+
                 //Check if software is present on USB
-                for (char c = 'D'; c <= 'Z'; c++)
+                for (char c = 'C'; c <= 'Z'; c++)
                 {
                     try
                     {
                         if (Directory.Exists(c + @":\Software"))
                         {
                             onlineOfflineLabel.Content = "OS Recovery will use files available on this drive.";
+                            localDriveLetter = c;
                             break;
                         }
                         else if (c == 'Z')
@@ -188,44 +194,83 @@ namespace beforewindeploy_custom_recovery
             }
         }
 
-        private async void ApplicationsCheck()
+        private void ApplicationsCheck()
         {
             RegistryKey uninstallKey = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall");
-            XDocument programsList = XDocument.Load(@"Y:\Programs.xml");
+            string path = "";
+            if ((string)onlineOfflineLabel.Content == "OS Recovery will use files available on this drive.")
+            {
+                path = $@"{localDriveLetter}:\Software\ProgramsList.xml";
+            } 
+            else if ((string)onlineOfflineLabel.Content == "OS Recovery will attempt to download required files from the server.")
+            {
+                path = @"Y:\ProgramsList.xml";
+            }
+
+            XDocument programsList = XDocument.Load(path);
+            
             foreach (var element in programsList.Root.Elements())
             {
-                int count = 0;
-                foreach (var subkey in uninstallKey.GetSubKeyNames())
-                {
-                    if (Convert.ToString(uninstallKey.OpenSubKey(subkey).GetValue("DisplayName")).Contains(Convert.ToString(element)))
-                    {
-                        if (count == subkey.Length - 1)
-                        {
-                            CheckBox checkBox = new CheckBox();
-                            checkBox.Content = Convert.ToString(element.Element("name").Value);
-                            checkBox.FontFamily = new FontFamily("Segoe UI Variable Text");
-                            checkBox.IsChecked = true;
-                            checkBox.Checked += (object sender, RoutedEventArgs e) =>
-                            {
-                                if (checkBox.IsChecked == true)
-                                {
-                                    thingsToDo.Add(Convert.ToString(checkBox.Content));
-                                }
-                                else
-                                {
-                                    if (thingsToDo.Contains(Convert.ToString(checkBox.Content)))
-                                    {
-                                        thingsToDo.Remove(Convert.ToString(checkBox.Content));
-                                    }
-                                }
-                            };
+                string programName = element.Element("name").Value;
+                bool isProgramFound = false;
 
-                            TreeViewItem treeViewItem = new TreeViewItem();
-                            treeViewItem.Header = checkBox;
+                foreach (var subkeyName in uninstallKey.GetSubKeyNames())
+                {
+                    using (var subKey = uninstallKey.OpenSubKey(subkeyName))
+                    {
+                        var displayName = Convert.ToString(subKey.GetValue("DisplayName"));
+                        if (displayName.Contains(programName))
+                        {
+                            isProgramFound = true;
+                            break;
                         }
                     }
                 }
+
+                if (!isProgramFound)
+                {
+                    CheckBox checkBox = new CheckBox
+                    {
+                        Content = programName,
+                        FontFamily = new FontFamily("Segoe UI Variable Text"),
+                        IsChecked = true
+                    };
+                    thingsToDo.Add(Convert.ToString(checkBox.Content));
+                    checkBox.Checked += (object sender, RoutedEventArgs e) =>
+                    {
+                        if (checkBox.IsChecked == true)
+                        {
+                            thingsToDo.Add(Convert.ToString(checkBox.Content));
+                        }
+                        else
+                        {
+                            if (thingsToDo.Contains(Convert.ToString(checkBox.Content)))
+                            {
+                                thingsToDo.Remove(Convert.ToString(checkBox.Content));
+                            }
+                        }
+                    };
+
+                    TreeViewItem treeViewItem = new TreeViewItem();
+                    treeViewItem.Header = checkBox;
+
+                    Applications.Items.Add(treeViewItem);
+                }
             }
+            this.Visibility = Visibility.Visible;
+            List<string> ApplicationsToDo = thingsToDo;
+            ApplicationsToDo.Remove("Drivers");
+            ApplicationsToDo.Remove("System Report");
+            if (ApplicationsToDo.Count == 0)
+            {
+                Applications.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                Applications.Visibility = Visibility.Visible;
+            }
+            var window = Window.GetWindow(this) as MainWindow;
+            window.LoadingScreen.Visibility = Visibility.Collapsed;
         }
 
         private async Task<int> FallbackToOnline()
