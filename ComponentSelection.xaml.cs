@@ -56,32 +56,40 @@ namespace beforewindeploy_custom_recovery
 
         class FixTask
         {
-            readonly string id;
-            readonly string name;
-            bool isSelected = false;
+            public readonly string name;
+            public bool isSelected = true;
 
-            public FixTask(string id, string name)
+            public FixTask(string name)
             {
-                this.id = id;
                 this.name = name;
             }
         }
 
-        private List<string> thingsToDo = new List<string>();
         private Dictionary<string, List<FixTask>> tasks = new Dictionary<string, List<FixTask>>();
 
         /**
          * {
+         *      "Drivers": [
+         *          FixTask("Drivers")
+         *      ],
          * 
-         * "Applications": [
-         *  FixTask("1", "Google Chrome")
-         * ],
+         *      "Applications": [
+         *          FixTask("Google Chrome")
+         *          FixTask("LibreOffice")
+         *          FixTask("Microsoft Teams")
+         *      ],
+         *      
+         *      "Post-applications": [
+         *          FixTask("System Report")
+         *          FixTask("Cleanup")
+         *      ],
          * }
          * 
          * Applications indeterminate "-" means that list of tasks mapped to isSelected some is true
          * 
          * 
          **/
+
         private char localDriveLetter;
         private async void ConnectToWiFi()
         {
@@ -236,10 +244,7 @@ namespace beforewindeploy_custom_recovery
 
             XDocument programsList = XDocument.Load(path);
 
-
-            // Declare an array of booleans for checkbox bindings
-            bool[] checkboxBindings = new bool[programsList.Root.Elements().Count()];
-
+            List<FixTask> applicationsTaskList = new List<FixTask>();
             foreach (var element in programsList.Root.Elements())
             {
                 string programName = element.Element("name").Value;
@@ -266,28 +271,26 @@ namespace beforewindeploy_custom_recovery
                         FontFamily = new FontFamily("Segoe UI Variable Text"),
                         IsChecked = true
                     };
-                    thingsToDo.Add(Convert.ToString(checkBox.Content));
+                    FixTask taskInfo = new FixTask(programName);
+                    applicationsTaskList.Add(taskInfo);
+
                     checkBox.Checked += (object sender, RoutedEventArgs e) =>
                     {
-                        thingsToDo.Add(Convert.ToString(checkBox.Content));
+                        FixTask taskInfo2 = new FixTask(programName);
+                        
                     };
                     checkBox.Unchecked += (object sender, RoutedEventArgs e) =>
                     {
-                        if (thingsToDo.Contains(Convert.ToString(checkBox.Content)))
+                        if (applicationsTaskList.Any(x => x.name == checkBox.Content.ToString()) == true)
                         {
-                            thingsToDo.Remove(Convert.ToString(checkBox.Content));
+                            applicationsTaskList.FirstOrDefault(x => x.name == checkBox.Content.ToString()).isSelected = false;
                         }
                     };
 
-                    // Get the index of the current checkbox
-                    int checkboxIndex = Applications.Items.Count;
-
-                    // Bind the checkbox to the corresponding boolean in the array
-                    Binding binding = new Binding("IsChecked");
-                    binding.Source = checkboxBindings;
+                    /*Binding binding = new Binding("IsChecked");
+                    binding.Source = applicationsCheckbox;
                     binding.Mode = BindingMode.TwoWay;
-                    binding.Converter = new IndexToBooleanConverter(checkboxIndex); // Custom converter to convert index to boolean
-                    checkBox.SetBinding(CheckBox.IsCheckedProperty, binding);
+                    checkBox.SetBinding(CheckBox.IsCheckedProperty, binding);*/
 
                     TreeViewItem treeViewItem = new TreeViewItem();
                     treeViewItem.Header = checkBox;
@@ -296,64 +299,9 @@ namespace beforewindeploy_custom_recovery
                 }
             }
 
-
-
-
-            /*foreach (var element in programsList.Root.Elements())
-            {
-                string programName = element.Element("name").Value;
-                bool isProgramFound = false;
-
-                foreach (var subkeyName in uninstallKey.GetSubKeyNames())
-                {
-                    using (var subKey = uninstallKey.OpenSubKey(subkeyName))
-                    {
-                        var displayName = Convert.ToString(subKey.GetValue("DisplayName"));
-                        if (displayName.Contains(programName))
-                        {
-                            isProgramFound = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (!isProgramFound)
-                {
-                    CheckBox checkBox = new CheckBox
-                    {
-                        Content = programName,
-                        FontFamily = new FontFamily("Segoe UI Variable Text"),
-                        IsChecked = true
-                    };
-                    thingsToDo.Add(Convert.ToString(checkBox.Content));
-                    checkBox.Checked += (object sender, RoutedEventArgs e) =>
-                    {
-                        thingsToDo.Add(Convert.ToString(checkBox.Content));
-                    };
-                    checkBox.Unchecked += (object sender, RoutedEventArgs e) =>
-                    {
-                        if (thingsToDo.Contains(Convert.ToString(checkBox.Content)))
-                        {
-                            thingsToDo.Remove(Convert.ToString(checkBox.Content));
-                        }
-                    };
-
-                    Binding binding = new Binding("IsChecked");
-                    binding.Source = applicationsCheckbox;
-                    binding.Mode = BindingMode.TwoWay;
-                    checkBox.SetBinding(CheckBox.IsCheckedProperty, binding);
-
-                    TreeViewItem treeViewItem = new TreeViewItem();
-                    treeViewItem.Header = checkBox;
-
-                    Applications.Items.Add(treeViewItem);
-                }
-            }*/
             this.Visibility = Visibility.Visible;
-            List<string> ApplicationsToDo = thingsToDo;
-            ApplicationsToDo.Remove("Drivers");
-            ApplicationsToDo.Remove("System Report");
-            if (ApplicationsToDo.Count == 0)
+            tasks.Add("Applications", applicationsTaskList);
+            if (applicationsTaskList.Count == 0)
             {
                 Applications.Visibility = Visibility.Collapsed;
             }
