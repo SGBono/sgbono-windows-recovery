@@ -11,7 +11,7 @@
     <Grid>
         <Label Content="Internal Build" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,20,20,0" FontSize="20" Foreground="Red" FontFamily="Segoe UI Variable Display"/>
         <Label x:Name="title" Content="Oops, an error has occurred" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="40,30,0,10" FontSize="28" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display"/>
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Stretch">
             <Image Source="/red_exclamation_mark_3d.png" Height="117" Width="117" Margin="0,0,0,20"/>
             <Label x:Name="errorLabel" Content="The server has failed to respond." FontFamily="Segoe UI Variable Text" HorizontalAlignment="Center" VerticalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
         </StackPanel>

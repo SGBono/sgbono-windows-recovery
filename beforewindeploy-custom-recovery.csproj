@@ -9,8 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Credentials.xml" />
     <None Remove="grinning_face_3d.png" />
     <None Remove="red_exclamation_mark_3d.png" />
+    <None Remove="SGBono.xml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,8 +25,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Credentials.xml">
+      <CopyToOutputDirectory></CopyToOutputDirectory>
+    </Resource>
     <Resource Include="grinning_face_3d.png" />
     <Resource Include="red_exclamation_mark_3d.png" />
+    <Resource Include="SGBono.xml" />
   </ItemGroup>
 
   <ItemGroup>

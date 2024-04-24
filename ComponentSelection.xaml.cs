@@ -54,43 +54,6 @@ namespace beforewindeploy_custom_recovery
             await Task.Delay(ms);
         }
 
-        class FixTask
-        {
-            public readonly string name;
-            public bool isSelected = true;
-
-            public FixTask(string name)
-            {
-                this.name = name;
-            }
-        }
-
-        private Dictionary<string, List<FixTask>> tasks = new Dictionary<string, List<FixTask>>();
-
-        /**
-         * {
-         *      "Drivers": [
-         *          FixTask("Drivers")
-         *      ],
-         * 
-         *      "Applications": [
-         *          FixTask("Google Chrome")
-         *          FixTask("LibreOffice")
-         *          FixTask("Microsoft Teams")
-         *      ],
-         *      
-         *      "Post-applications": [
-         *          FixTask("System Report")
-         *          FixTask("Cleanup")
-         *      ],
-         * }
-         * 
-         * Applications indeterminate "-" means that list of tasks mapped to isSelected some is true
-         * 
-         * 
-         **/
-
-        private char localDriveLetter;
         private async void ConnectToWiFi()
         {
             bool networkDone = false;
@@ -169,6 +132,46 @@ namespace beforewindeploy_custom_recovery
             Main2();
         }
 
+        class FixTask
+        {
+            public readonly string name;
+            public bool isSelected = true;
+
+            public FixTask(string name)
+            {
+                this.name = name;
+            }
+        }
+
+        private Dictionary<string, List<FixTask>> tasks = new Dictionary<string, List<FixTask>>();
+
+        /**
+         * {
+         *      "Drivers": [
+         *          FixTask("Drivers")
+         *      ],
+         * 
+         *      "Applications": [
+         *          FixTask("Google Chrome")
+         *          FixTask("LibreOffice")
+         *          FixTask("Microsoft Teams")
+         *      ],
+         *      
+         *      "Post-applications": [
+         *          FixTask("System Report")
+         *          FixTask("Cleanup")
+         *      ],
+         * }
+         * 
+         * Applications indeterminate "-" means that list of tasks mapped to isSelected some is true
+         * 
+         * 
+         **/
+
+        private char localDriveLetter;
+
+        private bool thatWasMe = false;
+
         private async void Main2()
         {
             try
@@ -189,12 +192,13 @@ namespace beforewindeploy_custom_recovery
                     }
                 }
 
-                if(driversPresent == true)
+                if (driversPresent == true)
                 {
                     fixListBox.Items.Remove(driversCheckbox);
                 }
 
                 //Check if software is present on USB
+                // !!IMPORTANT!! - Change start character from C to D before deployment
                 for (char c = 'C'; c <= 'Z'; c++)
                 {
                     try
@@ -226,6 +230,14 @@ namespace beforewindeploy_custom_recovery
                 {
                     return;
                 }
+                else
+                {
+                    ErrorScreen errorScreen = new ErrorScreen(ex.Message);
+                    this.Visibility = Visibility.Visible;
+                    grid.Visibility = Visibility.Collapsed;
+                    frame.Content = errorScreen;
+                    return;
+                }
             }
         }
 
@@ -236,7 +248,7 @@ namespace beforewindeploy_custom_recovery
             if ((string)onlineOfflineLabel.Content == "OS Recovery will use files available on this drive.")
             {
                 path = $@"{localDriveLetter}:\Software\ProgramsList.xml";
-            } 
+            }
             else if ((string)onlineOfflineLabel.Content == "OS Recovery will attempt to download required files from the server.")
             {
                 path = @"Y:\ProgramsList.xml";
@@ -276,15 +288,16 @@ namespace beforewindeploy_custom_recovery
 
                     checkBox.Checked += (object sender, RoutedEventArgs e) =>
                     {
-                        FixTask taskInfo2 = new FixTask(programName);
-                        
+                        tasks["Applications"].FirstOrDefault(x => x.name == programName).isSelected = true;
+                        CheckBox_Checked();
                     };
                     checkBox.Unchecked += (object sender, RoutedEventArgs e) =>
                     {
-                        if (applicationsTaskList.Any(x => x.name == checkBox.Content.ToString()) == true)
+                        if (tasks["Applications"].FirstOrDefault(x => x.name == programName) != null)
                         {
-                            applicationsTaskList.FirstOrDefault(x => x.name == checkBox.Content.ToString()).isSelected = false;
+                            tasks["Applications"].FirstOrDefault(x => x.name == programName).isSelected = false;
                         }
+                        CheckBox_Checked();
                     };
 
                     /*Binding binding = new Binding("IsChecked");
@@ -300,17 +313,27 @@ namespace beforewindeploy_custom_recovery
             }
 
             this.Visibility = Visibility.Visible;
+
             tasks.Add("Applications", applicationsTaskList);
+            List<FixTask> postApplicationsTaskList = new List<FixTask>
+            {
+                new FixTask("System Report"),
+                new FixTask("Cleanup")
+            };
+            tasks.Add("Post-applications", postApplicationsTaskList);
+
             if (applicationsTaskList.Count == 0)
             {
-                Applications.Visibility = Visibility.Collapsed;
+                fixListBox.Items.Remove("ApplicationsRoot");
             }
             else
             {
                 Applications.Visibility = Visibility.Visible;
             }
+
             var window = Window.GetWindow(this) as MainWindow;
             window.LoadingScreen.Visibility = Visibility.Collapsed;
+
         }
 
         private async Task<int> FallbackToOnline()
@@ -335,12 +358,17 @@ namespace beforewindeploy_custom_recovery
                     mountNetworkDrive.Start();
                     mountNetworkDrive.WaitForExit();
                 });
+                if (!File.Exists(@"Y:\ProgramsList.xml")) throw new Exception("You do not have the required files locally and the server is unreachable.");
                 return 0;
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
-                frame.Content = new ErrorScreen($"An error occured while attempting to read from server. \n{ex.Message}");
+                frame.Content = new ErrorScreen($"An error occurred while attempting to read from the server. \n{ex.Message}");
                 this.Visibility = Visibility.Visible;
                 grid.Visibility = Visibility.Collapsed;
+                frame.Visibility = Visibility.Visible;
+                var window = Window.GetWindow(this) as MainWindow;
+                window.LoadingScreen.Visibility = Visibility.Collapsed;
                 return 1;
             }
         }
@@ -352,7 +380,10 @@ namespace beforewindeploy_custom_recovery
 
         private void cleanupCheckbox_Checked(object sender, RoutedEventArgs e)
         {
-            thingsToDo.Add("Cleanup");
+            if (tasks.ContainsKey("Post-applications"))
+            {
+                tasks["Post-applications"].FirstOrDefault(x => x.name == "Cleanup").isSelected = true;
+            }
         }
 
         private void cleanupCheckbox_Unchecked(object sender, RoutedEventArgs e)
@@ -361,9 +392,112 @@ namespace beforewindeploy_custom_recovery
             if (result == MessageBoxResult.No)
             {
                 cleanupCheckbox.IsChecked = true;
-            } else if (result == MessageBoxResult.Yes)
+            }
+            else if (result == MessageBoxResult.Yes)
             {
-                thingsToDo.Remove("Cleanup");
+                tasks["Post-applications"].FirstOrDefault(x => x.name == "Cleanup").isSelected = false;
+            }
+        }
+
+        private void systemReportCheckbox_Checked(object sender, RoutedEventArgs e)
+        {
+            if (tasks.ContainsKey("Post-applications"))
+            {
+                tasks["Post-applications"].FirstOrDefault(x => x.name == "System Report").isSelected = true;
+            }
+        }
+
+        private void systemReportCheckbox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            if (tasks.ContainsKey("Post-applications"))
+            {
+                tasks["Post-applications"].FirstOrDefault(x => x.name == "System Report").isSelected = false;
+            }
+        }
+
+        private void CheckBox_Checked()
+        {
+            if (thatWasMe == true)
+            {
+                thatWasMe = false;
+            }
+            else
+            {
+                if (tasks["Applications"].All(x => x.isSelected == true))
+                {
+                    //If all checkboxes are checked
+                    thatWasMe = true;
+                    applicationsCheckbox.IsChecked = true;
+                }
+                else if (tasks["Applications"].Any(x => x.isSelected == true))
+                {
+                    //If some checkboxes are checked
+                    thatWasMe = true;
+                    applicationsCheckbox.IsChecked = null;
+                }
+                else if (tasks["Applications"].All(x => x.isSelected == false))
+                {
+                    //If no checkboxes are checked
+                    thatWasMe = true;
+                    applicationsCheckbox.IsChecked = false;
+                }
+            }
+        }
+
+        private void applicationsCheckbox_Checked(object sender, RoutedEventArgs e)
+        {
+            if (tasks.ContainsKey("Applications"))
+            {
+                if (thatWasMe == true)
+                {
+                    thatWasMe = false;
+                    return;
+                }
+                else
+                {
+                    tasks["Applications"].ForEach(x => x.isSelected = true);
+                    foreach (TreeViewItem item in Applications.Items)
+                    {
+                        thatWasMe = true;
+                        CheckBox checkBox = item.Header as CheckBox;
+                        checkBox.IsChecked = true;
+                    }
+                }
+            }
+        }
+
+        private void applicationsCheckbox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            if (tasks.ContainsKey("Applications"))
+            {
+                if (thatWasMe == true)
+                {
+                    thatWasMe = false;
+                    return;
+                }
+                else
+                {
+                    tasks["Applications"].ForEach(x => x.isSelected = false);
+                    foreach (TreeViewItem item in Applications.Items)
+                    {
+                        thatWasMe = true;
+                        CheckBox checkBox = item.Header as CheckBox;
+                        checkBox.IsChecked = false;
+                    }
+                }
+            }
+        }
+
+        private void applicationsCheckbox_Indeterminate(object sender, RoutedEventArgs e)
+        {
+            if (thatWasMe == true)
+            {
+                thatWasMe = false;
+                return;
+            }
+            else
+            {
+                applicationsCheckbox.IsChecked = false;
             }
         }
     }
