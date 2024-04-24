@@ -6,7 +6,7 @@
       xmlns:local="clr-namespace:beforewindeploy_custom_recovery"
       xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
       mc:Ignorable="d"
-      Title="Beforewindeploy Recovery" Height="600" Width="800" Background="White">
+      Title="Beforewindeploy Recovery" Height="600" Width="800" Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
 
     <Grid>
         <Label Content="Internal Build" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,20,20,0" FontSize="20" Foreground="Red" FontFamily="Segoe UI Variable Display"/>

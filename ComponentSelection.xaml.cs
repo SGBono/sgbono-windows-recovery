@@ -388,7 +388,7 @@ namespace beforewindeploy_custom_recovery
 
         private void cleanupCheckbox_Unchecked(object sender, RoutedEventArgs e)
         {
-            var result = iNKORE.UI.WPF.Modern.Controls.MessageBox.Show("Unchecking this may seriously compromise our operational security. You should NOT turn this off except for debugging purposes approved by the app developers. Are you sure you want to do this?", "Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            var result = iNKORE.UI.WPF.Modern.Controls.MessageBox.Show("Unchecking this may seriously compromise our operational security. \nYou should NOT turn this off except for debugging purposes approved by the app developers. \nAre you sure you want to do this?", "Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (result == MessageBoxResult.No)
             {
                 cleanupCheckbox.IsChecked = true;

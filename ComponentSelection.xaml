@@ -6,7 +6,7 @@
       xmlns:local="clr-namespace:beforewindeploy_custom_recovery"
       xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
       mc:Ignorable="d"
-      Title="Beforewindeploy Recovery" Height="600" Width="800">
+      Title="Beforewindeploy Recovery" Height="600" Width="800" Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
     <Grid>
         <Frame x:Name="frame" NavigationUIVisibility="Hidden"/>
         <Grid x:Name="grid">
