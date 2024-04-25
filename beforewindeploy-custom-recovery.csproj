@@ -6,6 +6,7 @@
     <RootNamespace>beforewindeploy_custom_recovery</RootNamespace>
     <UseWPF>true</UseWPF>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>

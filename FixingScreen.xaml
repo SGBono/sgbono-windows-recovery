@@ -9,12 +9,15 @@
       Title="Beforewindeploy Recovery" Height="600" Width="800" Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
 
     <Grid>
-        <Label Content="Internal Build" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,20,20,0" FontSize="20" Foreground="Red" FontFamily="Segoe UI Variable Display"/>
-        <Label x:Name="title" Content="We're working on it..." HorizontalAlignment="Left" VerticalAlignment="Top" Margin="40,30,0,10" FontSize="28" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display"/>
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-            <ui:ProgressBar x:Name="progressBar" Width="180" Height="32" Value="70" Margin="0,0,0,20"/>
-            <Label x:Name="etaLabel" Content="About 5 minutes remaining" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" FontFamily="Segoe UI Variable Text" Margin="0,0,0,2"/>
-            <Label x:Name="nowInstallingLabel" Content="We are now installing LibreOffice." HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" FontFamily="Segoe UI Variable Text"/>
-        </StackPanel>
+        <Frame x:Name="frame" NavigationUIVisibility="Hidden"/>
+        <Grid x:Name="grid">
+            <Label Content="Internal Build" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,20,20,0" FontSize="20" Foreground="Red" FontFamily="Segoe UI Variable Display"/>
+            <Label x:Name="title" Content="We're working on it..." HorizontalAlignment="Left" VerticalAlignment="Top" Margin="40,30,0,10" FontSize="28" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display"/>
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <ui:ProgressBar x:Name="progressBar" Width="180" Height="32" Value="70" Margin="0,0,0,20"/>
+                <Label x:Name="etaLabel" Content="About 5 minutes remaining" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" FontFamily="Segoe UI Variable Text" Margin="0,0,0,2"/>
+                <Label x:Name="nowInstallingLabel" Content="We are now installing LibreOffice." HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" FontFamily="Segoe UI Variable Text"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Page>

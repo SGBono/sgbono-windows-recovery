@@ -132,18 +132,22 @@ namespace beforewindeploy_custom_recovery
             Main2();
         }
 
-        class FixTask
+        public class FixTask
         {
             public readonly string name;
             public bool isSelected = true;
+            public readonly bool isOnline;
 
-            public FixTask(string name)
+            public FixTask(string name, bool isOnline = false)
             {
                 this.name = name;
+                this.isOnline = isOnline;
             }
         }
 
-        private Dictionary<string, List<FixTask>> tasks = new Dictionary<string, List<FixTask>>();
+        public static Dictionary<string, List<FixTask>> tasks = new Dictionary<string, List<FixTask>>();
+
+        public static bool isOnline = false;
 
         /**
          * {
@@ -168,9 +172,10 @@ namespace beforewindeploy_custom_recovery
          * 
          **/
 
-        private char localDriveLetter;
+        public static char localDriveLetter;
 
         private bool thatWasMe = false;
+
 
         private async void Main2()
         {
@@ -212,6 +217,7 @@ namespace beforewindeploy_custom_recovery
                         else if (c == 'Z')
                         {
                             if (await FallbackToOnline() == 1) throw new Exception("Stop execution");
+                            isOnline = true;
                         }
                     }
                     catch
@@ -219,6 +225,7 @@ namespace beforewindeploy_custom_recovery
                         if (c == 'Z')
                         {
                             if (await FallbackToOnline() == 1) throw new Exception("Stop execution");
+                            isOnline = true;
                         }
                     }
                 }
@@ -288,14 +295,15 @@ namespace beforewindeploy_custom_recovery
 
                     checkBox.Checked += (object sender, RoutedEventArgs e) =>
                     {
-                        tasks["Applications"].FirstOrDefault(x => x.name == programName).isSelected = true;
+                        tasks["Applications"].FirstOrDefault(x => x.name == checkBox.Content.ToString()).isSelected = true;
                         CheckBox_Checked();
                     };
+
                     checkBox.Unchecked += (object sender, RoutedEventArgs e) =>
                     {
-                        if (tasks["Applications"].FirstOrDefault(x => x.name == programName) != null)
+                        if (tasks["Applications"].FirstOrDefault(x => x.name == checkBox.Content.ToString()) != null)
                         {
-                            tasks["Applications"].FirstOrDefault(x => x.name == programName).isSelected = false;
+                            tasks["Applications"].FirstOrDefault(x => x.name == checkBox.Content.ToString()).isSelected = false;
                         }
                         CheckBox_Checked();
                     };
@@ -371,11 +379,6 @@ namespace beforewindeploy_custom_recovery
                 window.LoadingScreen.Visibility = Visibility.Collapsed;
                 return 1;
             }
-        }
-
-        private void startButton_Click(object sender, RoutedEventArgs e)
-        {
-
         }
 
         private void cleanupCheckbox_Checked(object sender, RoutedEventArgs e)
@@ -499,6 +502,35 @@ namespace beforewindeploy_custom_recovery
             {
                 applicationsCheckbox.IsChecked = false;
             }
+        }
+
+        private void driversCheckbox_Checked(object sender, RoutedEventArgs e)
+        {
+            if (tasks.ContainsKey("Drivers"))
+            {
+                tasks["Drivers"].FirstOrDefault(x => x.name == "Drivers").isSelected = true;
+            }
+        }
+
+        private void driversCheckbox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            if (tasks.ContainsKey("Drivers"))
+            {
+                tasks["Drivers"].FirstOrDefault(x => x.name == "Drivers").isSelected = false;
+            }
+        }
+
+        private void startButton_Click(object sender, RoutedEventArgs e)
+        {
+            grid.Visibility = Visibility.Collapsed;
+            frame.Visibility = Visibility.Visible;
+            FixingScreen fixingScreen = new FixingScreen();
+            frame.Content = fixingScreen;
+        }
+
+        private void cancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            Environment.Exit(0);
         }
     }
 }
