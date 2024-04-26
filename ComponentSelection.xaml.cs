@@ -134,14 +134,16 @@ namespace beforewindeploy_custom_recovery
 
         public class FixTask
         {
+            public readonly string id;
             public readonly string name;
             public bool isSelected = true;
             public readonly bool isOnline;
 
-            public FixTask(string name, bool isOnline = false)
+            public FixTask(string name, bool isOnline = false, string id = null)
             {
                 this.name = name;
                 this.isOnline = isOnline;
+                this.id = id;
             }
         }
 
@@ -266,6 +268,7 @@ namespace beforewindeploy_custom_recovery
             List<FixTask> applicationsTaskList = new List<FixTask>();
             foreach (var element in programsList.Root.Elements())
             {
+                string id = element.Element("id").Value;
                 string programName = element.Element("name").Value;
                 bool isProgramFound = false;
 
@@ -290,20 +293,20 @@ namespace beforewindeploy_custom_recovery
                         FontFamily = new FontFamily("Segoe UI Variable Text"),
                         IsChecked = true
                     };
-                    FixTask taskInfo = new FixTask(programName);
+                    FixTask taskInfo = new FixTask(programName, isOnline, id);
                     applicationsTaskList.Add(taskInfo);
 
                     checkBox.Checked += (object sender, RoutedEventArgs e) =>
                     {
-                        tasks["Applications"].FirstOrDefault(x => x.name == checkBox.Content.ToString()).isSelected = true;
+                        tasks["Applications"].FirstOrDefault(x => x.id == id).isSelected = true;
                         CheckBox_Checked();
                     };
 
                     checkBox.Unchecked += (object sender, RoutedEventArgs e) =>
                     {
-                        if (tasks["Applications"].FirstOrDefault(x => x.name == checkBox.Content.ToString()) != null)
+                        if (tasks["Applications"].FirstOrDefault(x => x.id == id) != null)
                         {
-                            tasks["Applications"].FirstOrDefault(x => x.name == checkBox.Content.ToString()).isSelected = false;
+                            tasks["Applications"].FirstOrDefault(x => x.id == id).isSelected = false;
                         }
                         CheckBox_Checked();
                     };

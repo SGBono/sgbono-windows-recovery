@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Programs>
+	<LibreOffice>
+		<id>1</id>
+		<name>LibreOffice</name>
+		<path>LibreOffice\LibreOffice.msi</path>
+		<run></run>
+		<arguments>/quiet /norestart ALLUSERS=1</arguments>
+		<customcscode>
+			<![CDATA[
+		using IWshRuntimeLibrary;
+		using System;
+		public class CustomCode {
+			public static void Execute() {
+				WshShell shell = new WshShell();
+				IWshShortcut shortcut = (IWshShortcut)shell.CreateShortcut(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\Calc (Like Excel).lnk");
+                shortcut.TargetPath = @"C:\Program Files\LibreOffice\program\scalc.exe";
+                shortcut.Save();
+
+                WshShell shell2 = new WshShell();
+                IWshShortcut shortcut2 = (IWshShortcut)shell2.CreateShortcut(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\Impress (Like PowerPoint).lnk");
+                shortcut2.TargetPath = @"C:\Program Files\LibreOffice\program\simpress.exe";
+                shortcut2.Save();
+
+                WshShell shell3 = new WshShell();
+                IWshShortcut shortcut3 = (IWshShortcut)shell3.CreateShortcut(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\Writer (Like Word).lnk");
+                shortcut3.TargetPath = @"C:\Program Files\LibreOffice\program\swriter.exe";
+                shortcut3.Save();
+			}
+		}
+		]]>
+		</customcscode>
+	</LibreOffice>
+	<Teams>
+		<id>2</id>
+		<name>Microsoft Teams</name>
+		<path>Teams\TeamsSetup.msi</path>
+		<run></run>
+		<arguments>/quiet /norestart ALLUSERS=1</arguments>
+		<customcscode/>
+	</Teams>
+	<Zoom>
+		<id>3</id>
+		<name>Zoom</name>
+		<path>Zoom\ZoomSetup.msi</path>
+		<run></run>
+		<arguments>/quiet /norestart ALLUSERS=1</arguments>
+		<customcscode/>
+	</Zoom>
+	<Chrome>
+		<id>4</id>
+		<name>Google Chrome</name>
+		<path>Chrome\ChromeSetup.msi</path>
+		<run></run>
+		<arguments>/quiet /norestart ALLUSERS=1</arguments>
+		<customcscode/>
+	</Chrome>
+	<TeamsPart2>
+		<id>5</id>
+		<name>Microsoft Teams (Part 2)</name>
+		<path></path>
+		<run>cmd.exe</run>
+		<arguments>/c explorer.exe &amp; timeout /T 5 &amp; "C:\Program Files (x86)\Teams Installer\Teams.exe" &amp; timeout /T 8</arguments>
+		<customcscode>
+			<![CDATA[
+			using IWshRuntimeLibrary;
+			using System;
+			public class CustomCode {
+				public static void Execute() {
+					WshShell shell = new WshShell();
+					IWshShortcut shortcut = (IWshShortcut)shell.CreateShortcut(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\Microsoft Teams.lnk");
+					shortcut.TargetPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\Microsoft\Teams\Update.exe";
+					shortcut.Arguments = @"--processStart ""Teams.exe""";
+					shortcut.Save();
+				}
+			}]]>			
+		</customcscode>
+	</TeamsPart2>
+</Programs>

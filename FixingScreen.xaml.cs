@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -36,23 +37,28 @@ namespace beforewindeploy_custom_recovery
             InitializeComponent();
             progressBar.Value = 0;
 
+            HandleInstall();
+        }
+
+        private async void HandleInstall()
+        {
             if (tasks.ContainsKey("Drivers") && tasks["Drivers"].FirstOrDefault(x => x.name == "Drivers").isSelected == true)
             {
-                InstallDrivers();
+                await InstallDrivers();
             }
 
             if (tasks.ContainsKey("Applications") && tasks["Applications"].Any(x => x.isSelected == true) == true)
             {
-                InstallApplications();
+                await InstallApplications();
             }
 
             if (tasks.ContainsKey("Post-applications") && tasks["Post-applications"].Any(x => x.isSelected == true) == true)
             {
-                InstallPostApplications();
+                await InstallPostApplications();
             }
         }
 
-        private async void InstallDrivers()
+        private async Task InstallDrivers()
         {
             if (isOnline == true)
             {
@@ -143,117 +149,128 @@ namespace beforewindeploy_custom_recovery
 
         private char localDriveLetter = ComponentSelection.localDriveLetter;
 
-        private async void InstallApplications()
+        private async Task InstallApplications()
         {
-            int driversCount = 0;
-            int appsCount = 0;
-            int postAppsCount = 0;
-
-            if (tasks.ContainsKey("Drivers") != false) driversCount = tasks["Drivers"].Count;
-            if (tasks.ContainsKey("Applications") != false) appsCount = tasks["Applications"].Count;
-            if (tasks.ContainsKey("Post-applications") != false) postAppsCount = tasks["Post-applications"].Count;
-
-            await Delay(2000);
-            progressBar.Value += 100 / (driversCount + appsCount + postAppsCount);
-
-            if (isOnline == false)
+            try
             {
-                foreach (var item in tasks["Applications"].Where(x => x.isSelected))
+                int driversCount = 0;
+                int appsCount = 0;
+                int postAppsCount = 0;
+
+                if (tasks.ContainsKey("Drivers") != false) driversCount = tasks["Drivers"].Count;
+                if (tasks.ContainsKey("Applications") != false) appsCount = tasks["Applications"].Count;
+                if (tasks.ContainsKey("Post-applications") != false) postAppsCount = tasks["Post-applications"].Count;
+
+                await Delay(2000);
+                progressBar.Value += 100 / (driversCount + appsCount + postAppsCount);
+
+                if (isOnline == false)
                 {
-                    XDocument program = XDocument.Load($@"{localDriveLetter}:\Software\ProgramsList.xml");
-                    bool programInstalled = false;
-                    var name = program.Element("name").Value;
-                    var path = program.Element("path").Value;
-                    var run = program.Element("run").Value;
-                    var arguments = program.Element("arguments").Value;
-                    var customcscode = program.Element("customcscode").Value;
-                    while (programInstalled == false)
+                    foreach (var item in tasks["Applications"].Where(x => x.isSelected == true))
                     {
-                        try
+                        XDocument program = XDocument.Load($@"{localDriveLetter}:\Software\ProgramsList.xml");
+                        bool programInstalled = false;
+                        var name = program.Root.Element(item.name).Element("name").Value;
+                        var path = program.Root.Element(item.name).Element("path").Value;
+                        var run = program.Root.Element(item.name).Element("run").Value;
+                        var arguments = program.Root.Element(item.name).Element("arguments").Value;
+                        var customcscode = program.Root.Element(item.name).Element("customcscode").Value;
+                        while (programInstalled == false)
                         {
-                            await Delay(500);
-                            if (!string.IsNullOrEmpty(path))
+                            try
                             {
-                                Process setup = new Process();
-                                setup.StartInfo.FileName = $@"Y:\{path}";
-                                setup.StartInfo.Arguments = arguments;
-                                setup.StartInfo.CreateNoWindow = true;
-                                setup.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                                await Task.Run(() =>
+                                await Delay(500);
+                                if (!string.IsNullOrEmpty(path))
                                 {
-                                    setup.Start();
-                                    setup.WaitForExit();
-                                });
-                            }
-                            else
-                            {
-                                if (string.IsNullOrEmpty(run))
-                                {
-                                    throw new Exception("The XML file was not configured correctly - both path and run elements are missing.");
-                                }
-                                Process setup = new Process();
-                                setup.StartInfo.FileName = $@"{run}";
-                                setup.StartInfo.Arguments = arguments;
-                                setup.StartInfo.CreateNoWindow = true;
-                                setup.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                                await Task.Run(() =>
-                                {
-                                    setup.Start();
-                                    setup.WaitForExit();
-                                });
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            ErrorScreen errorScreen = new ErrorScreen($"There was an error installing {name}\n"+ex.Message);
-                            this.Visibility = Visibility.Visible;
-                            grid.Visibility = Visibility.Collapsed;
-                            frame.Content = errorScreen;
-                            return;
-                        }
-                        await Delay(500);
-                        await Task.Run(() =>
-                        {
-                            if (string.IsNullOrEmpty(customcscode))
-                            {
-                                programInstalled = true;
-                            }
-                            else
-                            {
-                                CompilerParameters parameters = new CompilerParameters();
-                                parameters.ReferencedAssemblies.Add("System.dll");
-                                parameters.ReferencedAssemblies.Add(@"C:\Windows\System32\oobe\Automation\Interop.IWshRuntimeLibrary.dll");
-                                parameters.GenerateInMemory = true;
-                                CompilerResults results = new CSharpCodeProvider().CompileAssemblyFromSource(parameters, customcscode);
-                                if (results.Errors.Count > 0)
-                                {
-                                    foreach (CompilerError error in results.Errors)
+                                    Process setup = new Process();
+                                    setup.StartInfo.FileName = $@"Y:\{path}";
+                                    setup.StartInfo.Arguments = arguments;
+                                    setup.StartInfo.CreateNoWindow = true;
+                                    setup.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                                    await Task.Run(() =>
                                     {
-                                        Application.Current.Dispatcher.Invoke(() =>
-                                        {
-                                            ErrorScreen errorScreen = new ErrorScreen($"There was an error running package scripts for {name}\n" + error.ErrorText);
-                                            this.Visibility = Visibility.Visible;
-                                            grid.Visibility = Visibility.Collapsed;
-                                            frame.Content = errorScreen;
-                                            return;
-                                        });
-                                    }
+                                        setup.Start();
+                                        setup.WaitForExit();
+                                    });
                                 }
                                 else
                                 {
-                                    Type customType = results.CompiledAssembly.GetType("CustomCode");
-                                    MethodInfo method = customType.GetMethod("Execute");
-                                    method.Invoke(null, null);
-                                    programInstalled = true;
+                                    if (string.IsNullOrEmpty(run))
+                                    {
+                                        throw new Exception("The XML file was not configured correctly - both path and run elements are missing.");
+                                    }
+                                    Process setup = new Process();
+                                    setup.StartInfo.FileName = $@"{run}";
+                                    setup.StartInfo.Arguments = arguments;
+                                    setup.StartInfo.CreateNoWindow = true;
+                                    setup.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                                    await Task.Run(() =>
+                                    {
+                                        setup.Start();
+                                        setup.WaitForExit();
+                                    });
                                 }
                             }
-                        });
+                            catch (Exception ex)
+                            {
+                                ErrorScreen errorScreen = new ErrorScreen($"There was an error installing {name}.\n" + ex.Message);
+                                this.Visibility = Visibility.Visible;
+                                grid.Visibility = Visibility.Collapsed;
+                                frame.Content = errorScreen;
+                                return;
+                            }
+                            await Delay(500);
+                            await Task.Run(() =>
+                            {
+                                if (string.IsNullOrEmpty(customcscode))
+                                {
+                                    programInstalled = true;
+                                }
+                                else
+                                {
+                                    CompilerParameters parameters = new CompilerParameters();
+                                    parameters.ReferencedAssemblies.Add("System.dll");
+                                    parameters.ReferencedAssemblies.Add(@"C:\Windows\System32\oobe\Automation\Interop.IWshRuntimeLibrary.dll");
+                                    parameters.GenerateInMemory = true;
+                                    CompilerResults results = new CSharpCodeProvider().CompileAssemblyFromSource(parameters, customcscode);
+                                    if (results.Errors.Count > 0)
+                                    {
+                                        foreach (CompilerError error in results.Errors)
+                                        {
+                                            Application.Current.Dispatcher.Invoke(() =>
+                                            {
+                                                ErrorScreen errorScreen = new ErrorScreen($"There was an error running package scripts for {name}\n" + error.ErrorText);
+                                                this.Visibility = Visibility.Visible;
+                                                grid.Visibility = Visibility.Collapsed;
+                                                frame.Content = errorScreen;
+                                                return;
+                                            });
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Type customType = results.CompiledAssembly.GetType("CustomCode");
+                                        MethodInfo method = customType.GetMethod("Execute");
+                                        method.Invoke(null, null);
+                                        programInstalled = true;
+                                    }
+                                }
+                            });
+                        }
+                        progressBar.Value += 100 / (driversCount + appsCount + postAppsCount);
                     }
                 }
+            } catch (Exception ex)
+            {
+                ErrorScreen errorScreen = new ErrorScreen($"There was an error in the applications install phase.\n" + ex.Message);
+                this.Visibility = Visibility.Visible;
+                grid.Visibility = Visibility.Collapsed;
+                frame.Content = errorScreen;
+                return;
             }
         }
 
-        private async void InstallPostApplications()
+        private async Task InstallPostApplications()
         {
             int driversCount = 0;
             int appsCount = 0;
@@ -264,8 +281,6 @@ namespace beforewindeploy_custom_recovery
             if (tasks.ContainsKey("Post-applications") != false) postAppsCount = tasks["Post-applications"].Count;
 
             await Delay(2000);
-            progressBar.Value += 42;
-
         }
 
         private async Task Delay(int howlong)
