@@ -54,7 +54,7 @@ namespace beforewindeploy_custom_recovery
             await Task.Delay(ms);
         }
 
-        private async void ConnectToWiFi()
+        private void ConnectToWiFi()
         {
             bool networkDone = false;
             while (networkDone == false)
@@ -95,7 +95,7 @@ namespace beforewindeploy_custom_recovery
                         connectProcess.Start();
                         connectProcess.WaitForExit();
 
-                        int attempts = 0;
+                        /*int attempts = 0;
                         while (!await IsWiFiConnected())
                         {
                             if (attempts == 31)
@@ -107,7 +107,7 @@ namespace beforewindeploy_custom_recovery
                                 await Delay(500);
                                 attempts++;
                             }
-                        }
+                        }*/
 
                         process.WaitForExit();
                         break;
@@ -253,6 +253,7 @@ namespace beforewindeploy_custom_recovery
         private void ApplicationsCheck()
         {
             RegistryKey uninstallKey = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall");
+            RegistryKey uninstallKeyUser = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall");
             string path = "";
             if ((string)onlineOfflineLabel.Content == "OS Recovery will use files available on this drive.")
             {
@@ -278,6 +279,29 @@ namespace beforewindeploy_custom_recovery
                     {
                         var displayName = Convert.ToString(subKey.GetValue("DisplayName"));
                         if (displayName.Contains(programName))
+                        {
+                            isProgramFound = true;
+                            break;
+                        }
+                        else if (displayName.Contains(programName.Replace(" (Part 2)", "")))
+                        {
+                            isProgramFound = true;
+                            break;
+                        }
+                    }
+                }
+
+                foreach (var subkeyName in uninstallKeyUser.GetSubKeyNames())
+                {
+                    using (var subKey = uninstallKeyUser.OpenSubKey(subkeyName))
+                    {
+                        var displayName = Convert.ToString(subKey.GetValue("DisplayName"));
+                        if (displayName.Contains(programName))
+                        {
+                            isProgramFound = true;
+                            break;
+                        } 
+                        else if (displayName.Contains(programName.Replace(" (Part 2)", "")))
                         {
                             isProgramFound = true;
                             break;
@@ -311,11 +335,6 @@ namespace beforewindeploy_custom_recovery
                         CheckBox_Checked();
                     };
 
-                    /*Binding binding = new Binding("IsChecked");
-                    binding.Source = applicationsCheckbox;
-                    binding.Mode = BindingMode.TwoWay;
-                    checkBox.SetBinding(CheckBox.IsCheckedProperty, binding);*/
-
                     TreeViewItem treeViewItem = new TreeViewItem();
                     treeViewItem.Header = checkBox;
 
@@ -335,7 +354,7 @@ namespace beforewindeploy_custom_recovery
 
             if (applicationsTaskList.Count == 0)
             {
-                fixListBox.Items.Remove("ApplicationsRoot");
+                fixListBox.Items.Remove(ApplicationsRoot);
             }
             else
             {
@@ -354,7 +373,6 @@ namespace beforewindeploy_custom_recovery
                 ConnectToWiFi();
                 XDocument credentials = XDocument.Load(@"Credentials.xml");
                 var credential = credentials.Root;
-                //MessageBox.Show(Convert.ToString(credential));
                 var username = credential.Element("Username").Value;
                 var password = credential.Element("Password").Value;
                 await Task.Run(() =>

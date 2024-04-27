@@ -17,14 +17,14 @@
         </StackPanel>
         <ListBox x:Name="fixListBox" HorizontalAlignment="Center" VerticalAlignment="Top" Width="720" Height="230" Margin="0,130,0,0" Background="Transparent">
             <CheckBox x:Name="driversCheckbox" Content="Drivers" Margin="33,0,0,0" FontFamily="Segoe UI Variable Text" IsChecked="True" Checked="driversCheckbox_Checked" Unchecked="driversCheckbox_Unchecked"/>
-            <TreeView x:Name="ApplicationsRoot" Margin="-15,-19,0,0" FontFamily="Segoe UI Variable Text">
+            <TreeView x:Name="ApplicationsRoot" Margin="-15,0,0,0" FontFamily="Segoe UI Variable Text">
                 <TreeViewItem x:Name="Applications" IsExpanded="True">
                         <TreeViewItem.Header>
                             <CheckBox x:Name="applicationsCheckbox" Content="Applications" FontFamily="Segoe UI Variable Text" IsChecked="True" IsThreeState="True" Checked="applicationsCheckbox_Checked" Unchecked="applicationsCheckbox_Unchecked" Indeterminate="applicationsCheckbox_Indeterminate"/>
                         </TreeViewItem.Header>
                     </TreeViewItem>
             </TreeView>
-            <CheckBox x:Name="systemReportCheckbox" Content="System Report" Margin="33,-20,0,0" FontFamily="Segoe UI Variable Text" IsChecked="True" Checked="systemReportCheckbox_Checked" Unchecked="systemReportCheckbox_Unchecked"/>
+            <CheckBox x:Name="systemReportCheckbox" Content="System Report" Margin="33,0,0,0" FontFamily="Segoe UI Variable Text" IsChecked="True" Checked="systemReportCheckbox_Checked" Unchecked="systemReportCheckbox_Unchecked"/>
         </ListBox>
         <Label x:Name="etaLabel" Content="Estimated time required: 5 min" Margin="40,0,0,165" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontFamily="Segoe UI Variable Text"/>
         <Label x:Name="onlineOfflineLabel" Content="OS Recovery will attempt to download required files from the server." Margin="40,0,0,140" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontFamily="Segoe UI Variable Text"/>
