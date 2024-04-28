@@ -6,7 +6,7 @@
       xmlns:local="clr-namespace:beforewindeploy_custom_recovery"
       xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
       mc:Ignorable="d"
-      Title="Beforewindeploy Recovery" Height="600" Width="800" Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
+      Title="Beforewindeploy Recovery" MinHeight="600" MinWidth="800" Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
     <Grid>
         <Frame x:Name="frame" NavigationUIVisibility="Hidden"/>
         <Grid x:Name="grid">
@@ -15,17 +15,38 @@
             <Label x:Name="title" Content="Let's get your PC fixed" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="40,30,0,10" FontSize="28" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display"/>
             <Label x:Name="subtitle" Content="Select the components missing from this computer, then press Start to apply fixes." FontSize="14" FontFamily="Segoe UI Variable" Margin="40,0,0,0"/>
         </StackPanel>
-        <ListBox x:Name="fixListBox" HorizontalAlignment="Center" VerticalAlignment="Top" Width="720" Height="230" Margin="0,130,0,0" Background="Transparent">
-            <CheckBox x:Name="driversCheckbox" Content="Drivers" Margin="33,0,0,0" FontFamily="Segoe UI Variable Text" IsChecked="True" Checked="driversCheckbox_Checked" Unchecked="driversCheckbox_Unchecked"/>
-            <TreeView x:Name="ApplicationsRoot" Margin="-15,0,0,0" FontFamily="Segoe UI Variable Text">
-                <TreeViewItem x:Name="Applications" IsExpanded="True">
+            <ListBox x:Name="fixListBox" HorizontalAlignment="Center" VerticalAlignment="Top" MinWidth="720" Height="250" Margin="0,130,0,0"  Background="Transparent">
+                <ListBox.Resources>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Border Background="{TemplateBinding Background}">
+                                        <ContentPresenter />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListBox.Resources>
+                <TreeView x:Name="ApplicationsRoot" Margin="-15,0,0,0" FontFamily="Segoe UI Variable Text" Background="Transparent">
+                    <CheckBox x:Name="driversCheckbox" Content="Drivers" Margin="0,0,0,0" FontFamily="Segoe UI Variable Text" IsChecked="True" Checked="driversCheckbox_Checked" Unchecked="driversCheckbox_Unchecked"/>
+                    <TreeViewItem x:Name="Applications" IsExpanded="True">
                         <TreeViewItem.Header>
                             <CheckBox x:Name="applicationsCheckbox" Content="Applications" FontFamily="Segoe UI Variable Text" IsChecked="True" IsThreeState="True" Checked="applicationsCheckbox_Checked" Unchecked="applicationsCheckbox_Unchecked" Indeterminate="applicationsCheckbox_Indeterminate"/>
                         </TreeViewItem.Header>
                     </TreeViewItem>
-            </TreeView>
-            <CheckBox x:Name="systemReportCheckbox" Content="System Report" Margin="33,0,0,0" FontFamily="Segoe UI Variable Text" IsChecked="True" Checked="systemReportCheckbox_Checked" Unchecked="systemReportCheckbox_Unchecked"/>
-        </ListBox>
+                    <CheckBox x:Name="systemReportCheckbox" Content="System Report" Margin="0,0,0,0" FontFamily="Segoe UI Variable Text" IsChecked="True" Checked="systemReportCheckbox_Checked" Unchecked="systemReportCheckbox_Unchecked"/>
+                </TreeView>
+            </ListBox>
         <Label x:Name="etaLabel" Content="Estimated time required: 5 min" Margin="40,0,0,165" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontFamily="Segoe UI Variable Text"/>
         <Label x:Name="onlineOfflineLabel" Content="OS Recovery will attempt to download required files from the server." Margin="40,0,0,140" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontFamily="Segoe UI Variable Text"/>
         <CheckBox x:Name="cleanupCheckbox" Content="Clean up all setup files when complete" VerticalAlignment="Bottom" Margin="40,0,0,100" FontFamily="Segoe UI Variable Text" IsChecked="True" Checked="cleanupCheckbox_Checked" Unchecked="cleanupCheckbox_Unchecked"/>

@@ -17,6 +17,6 @@
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
             <Image Source="/grinning_face_3d.png" Height="183" Width="183"/>
         </StackPanel>
-        <Button x:Name="finishButton" Content="Finish" Height="32" Width="120" Style="{DynamicResource AccentButtonStyle}" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,40,40"/>
+        <Button x:Name="finishButton" Content="Finish" Height="32" Width="120" Style="{DynamicResource AccentButtonStyle}" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,30,55"/>
     </Grid>
 </Page>

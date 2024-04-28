@@ -2,23 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Management;
 using System.Net.NetworkInformation;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Converters;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Xml.Linq;
 
 namespace beforewindeploy_custom_recovery
@@ -201,7 +192,7 @@ namespace beforewindeploy_custom_recovery
 
                 if (driversPresent == true)
                 {
-                    fixListBox.Items.Remove(driversCheckbox);
+                    ApplicationsRoot.Items.Remove(driversCheckbox);
                 }
 
                 //Check if software is present on USB
@@ -300,7 +291,7 @@ namespace beforewindeploy_custom_recovery
                         {
                             isProgramFound = true;
                             break;
-                        } 
+                        }
                         else if (displayName.Contains(programName.Replace(" (Part 2)", "")))
                         {
                             isProgramFound = true;
@@ -354,7 +345,7 @@ namespace beforewindeploy_custom_recovery
 
             if (applicationsTaskList.Count == 0)
             {
-                fixListBox.Items.Remove(ApplicationsRoot);
+                fixListBox.Items.Remove(Applications);
             }
             else
             {

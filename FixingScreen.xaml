@@ -6,7 +6,7 @@
       xmlns:local="clr-namespace:beforewindeploy_custom_recovery"
       xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
       mc:Ignorable="d"
-      Title="Beforewindeploy Recovery" Height="600" Width="800" Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
+      Title="Beforewindeploy Recovery" MinHeight="600" MinWidth="800" Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
 
     <Grid>
         <Frame x:Name="frame" NavigationUIVisibility="Hidden"/>
@@ -15,7 +15,7 @@
             <Label x:Name="title" Content="We're working on it..." HorizontalAlignment="Left" VerticalAlignment="Top" Margin="40,30,0,10" FontSize="28" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display"/>
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                 <ui:ProgressBar x:Name="progressBar" Width="180" Height="32" Value="70" Margin="0,0,0,20"/>
-                <Label x:Name="etaLabel" Content="About 5 minutes remaining" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" FontFamily="Segoe UI Variable Text" Margin="0,0,0,2"/>
+                <Label x:Name="etaLabel" Content="About 5 minutes remaining" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" FontFamily="Segoe UI Variable Text" Margin="0,0,0,2" Visibility="Collapsed"/>
                 <Label x:Name="nowInstallingLabel" Content="We are now installing LibreOffice." HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" FontFamily="Segoe UI Variable Text"/>
             </StackPanel>
         </Grid>
