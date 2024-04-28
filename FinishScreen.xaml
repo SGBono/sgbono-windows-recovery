@@ -12,11 +12,12 @@
         <Label Content="Internal Build" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,20,20,0" FontSize="20" Foreground="Red" FontFamily="Segoe UI Variable Display"/>
         <StackPanel Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Top">
             <Label x:Name="title" Content="Your PC is ready to go" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="40,30,0,10" FontSize="28" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display"/>
-            <Label x:Name="subtitle" Content="All changes have been applied!" FontSize="14" FontFamily="Segoe UI Variable" Margin="40,0,0,0"/>
+            <Label x:Name="subtitle" Content="All changes have been applied!" FontSize="14" FontFamily="Segoe UI Variable" Margin="40,0,0,2"/>
+            <Label x:Name="systemReportLocation" Content="The system report has been saved to C:\Users\User\Desktop\System Report.txt." Visibility="Collapsed" FontSize="14" FontFamily="Segoe UI Variable" Margin="40,0,0,0"/>
         </StackPanel>
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
             <Image Source="/grinning_face_3d.png" Height="183" Width="183"/>
         </StackPanel>
-        <Button x:Name="finishButton" Content="Finish" Height="32" Width="120" Style="{DynamicResource AccentButtonStyle}" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,30,55"/>
+        <Button x:Name="finishButton" Content="Finish" Height="32" Width="120" Style="{DynamicResource AccentButtonStyle}" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,30,55" Click="finishButton_Click"/>
     </Grid>
 </Page>

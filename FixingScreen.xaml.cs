@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Management;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
@@ -20,6 +21,8 @@ namespace beforewindeploy_custom_recovery
     {
         Dictionary<string, List<ComponentSelection.FixTask>> tasks = ComponentSelection.tasks;
         private bool isOnline = ComponentSelection.isOnline;
+        private bool didSystemReport = false;
+        private string systemReportLocation = "";
 
         public FixingScreen()
         {
@@ -104,10 +107,17 @@ namespace beforewindeploy_custom_recovery
                 }
 
                 progressBar.Value = 100;
+                nowInstallingLabel.Content = "All done.";
+                await Delay(1000);
                 grid.Visibility = Visibility.Collapsed;
                 frame.Visibility = Visibility.Visible;
                 FinishScreen finishScreen = new FinishScreen();
                 frame.Content = finishScreen;
+                if (didSystemReport == true)
+                {
+                    finishScreen.systemReportLocation.Visibility = Visibility.Visible;
+                    finishScreen.systemReportLocation.Content = $"The system report has been saved to {systemReportLocation}.";
+                }
             }
             catch (Exception ex)
             {
@@ -259,7 +269,8 @@ namespace beforewindeploy_custom_recovery
                     {
                         ConnectToServer("Software");
                         documentPath = $@"Y:\ProgramsList.xml";
-                    } else if (isOnline == false)
+                    }
+                    else if (isOnline == false)
                     {
                         documentPath = $@"{localDriveLetter}:\Software\ProgramsList.xml";
                     }
@@ -281,7 +292,8 @@ namespace beforewindeploy_custom_recovery
                                 if (isOnline == true)
                                 {
                                     setupPath = $@"Y:\{path}";
-                                } else if (isOnline == false)
+                                }
+                                else if (isOnline == false)
                                 {
                                     setupPath = $@"{localDriveLetter}:\Software\{path}";
                                 }
@@ -388,7 +400,223 @@ namespace beforewindeploy_custom_recovery
                 if (tasks.ContainsKey("Applications") != false) appsCount = tasks["Applications"].Where(x => x.isSelected == true).Count();
                 if (tasks.ContainsKey("Post-applications") != false) postAppsCount = tasks["Post-applications"].Where(x => x.isSelected == true).Count();
 
-                await Delay(2000);
+                await Delay(1000);
+
+                if (tasks["Post-applications"].FirstOrDefault(x => x.name == "System Report").isSelected == true)
+                {
+                    nowInstallingLabel.Content = "We are now generating the system report.";
+                    await Delay(1000);
+
+                    string cpuName = "";
+                    string gpuName = "";
+                    string ramInfo = "";
+                    string storageSize = "";
+                    string batteryHealth = "";
+
+                    //CPU
+                    ManagementObjectSearcher mos = new ManagementObjectSearcher("root\\CIMV2", "SELECT * FROM Win32_Processor");
+                    foreach (ManagementObject mo in mos.Get())
+                    {
+                        cpuName = "CPU: " + (string)mo["Name"];
+                    }
+
+                    //GPU
+                    bool hasiGPU = false;
+                    string iGPUName = "";
+                    using (var searcher1 = new ManagementObjectSearcher("select * from Win32_VideoController"))
+                    {
+                        foreach (ManagementObject obj in searcher1.Get())
+                        {
+                            if (obj["Name"].ToString() == "Microsoft Basic Display Adapter")
+                            {
+                                gpuName = "GPU: No GPU drivers installed";
+                            }
+                            //Improved iGPU detector - should work theoretically though this requires testing
+                            else if (obj["Name"].ToString() == "AMD Radeon(TM) Graphics" || obj["Name"].ToString().Contains("Intel") && !obj["Name"].ToString().Contains("Intel Arc") && obj["Name"].ToString() != "Intel(R) Arc(TM) Graphics")
+                            {
+                                hasiGPU = true;
+                                iGPUName = obj["Name"].ToString();
+                            }
+                            else
+                            {
+                                gpuName = "GPU: " + (string)obj["Name"];
+                                break;
+                            }
+                        }
+                        if (gpuName == "" && hasiGPU == true)
+                        {
+                            gpuName = "GPU: " + iGPUName + "(iGPU)";
+                        }
+                    }
+
+                    //RAM
+                    ObjectQuery objectQuery = new ObjectQuery("SELECT * FROM Win32_OperatingSystem");
+                    ManagementObjectSearcher managementObjectSearcher = new ManagementObjectSearcher(objectQuery);
+
+                    ManagementObjectSearcher searcher2 = new ManagementObjectSearcher("Select * from Win32_PhysicalMemory");
+                    var ramspeed = "";
+                    var newram = 0;
+                    var newMemoryType = "";
+                    foreach (ManagementObject obj in searcher2.Get())
+                    {
+                        try
+                        {
+                            ramspeed = Convert.ToString(obj["ConfiguredClockSpeed"]);
+                        }
+                        catch { }
+                    }
+                    foreach (ManagementObject managementObject in managementObjectSearcher.Get())
+                    {
+                        newram = Convert.ToInt32(managementObject["TotalVisibleMemorySize"]) / 1000 / 1000;
+                    }
+                    foreach (ManagementObject managementObject in searcher2.Get())
+                    {
+                        string memoryType = managementObject["MemoryType"].ToString();
+                        switch (memoryType)
+                        {
+                            case "20":
+                                newMemoryType = "DDR";
+                                break;
+                            case "21":
+                                newMemoryType = "DDR2";
+                                break;
+                            case "24":
+                                newMemoryType = "DDR3";
+                                break;
+                            case "26":
+                                newMemoryType = "DDR4";
+                                break;
+                            case "34":
+                                newMemoryType = "DDR5";
+                                break;
+                            case "0":
+                                string memoryType2 = managementObject["SMBIOSMemoryType"]?.ToString() ?? "0";
+                                if (memoryType2 == "34")
+                                {
+                                    newMemoryType = "DDR5";
+                                }
+                                else if (memoryType2 == "20")
+                                {
+                                    newMemoryType = "DDR";
+                                }
+                                else if (memoryType2 == "21")
+                                {
+                                    newMemoryType = "DDR2";
+                                }
+                                else if (memoryType2 == "24")
+                                {
+                                    newMemoryType = "DDR3";
+                                }
+                                else if (memoryType2 == "26")
+                                {
+                                    newMemoryType = "DDR4";
+                                }
+                                else
+                                {
+                                    newMemoryType = "Unknown";
+                                }
+                                break;
+                            default:
+                                newMemoryType = "Unknown";
+                                break;
+                        }
+                    }
+                    if (ramspeed == null || ramspeed == "" || ramspeed == "0")
+                    {
+                        ramspeed = "Unknown ";
+                    }
+                    else if (newMemoryType == "Unknown")
+                    {
+                        //Last last resort RAM type check
+                        //Banking on nobody being able to reach 4800 MT/s on DDR4 (DDR5 JEDEC = 4800 MT/s)
+                        //Also not considering the LPDDR5/LPDDR5x users
+                        if (Convert.ToInt32(ramspeed) >= 4800)
+                        {
+                            newMemoryType = "DDR5";
+                        }
+                    }
+
+                    ramInfo = "RAM: " + newram + "GB " + ramspeed + "MT/s " + newMemoryType;
+
+                    //Storage
+                    DriveInfo mainDrive = new DriveInfo(System.IO.Path.GetPathRoot(Environment.GetFolderPath(Environment.SpecialFolder.System)));
+                    var totalsize = mainDrive.TotalSize / 1024 / 1024 / 1024;
+                    storageSize = "Storage on Windows drive: " + totalsize + "GB";
+                    await Delay(200);
+
+                    //Battery health
+                    ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_Battery");
+                    ManagementObjectSearcher searcher = new ManagementObjectSearcher(query);
+                    int designCapacity = 0;
+                    int fullChargeCapacity = 0;
+                    foreach (ManagementObject queryObj in searcher.Get())
+                    {
+                        designCapacity = Convert.ToInt32(queryObj["DesignCapacity"]);
+                        fullChargeCapacity = Convert.ToInt32(queryObj["FullChargeCapacity"]);
+
+                        if (designCapacity == 0 || fullChargeCapacity == 0)
+                        {
+                            batteryHealth = "Battery health: No battery detected";
+                        }
+                        else
+                        {
+                            double batteryHealthPercentage = Math.Round((double)fullChargeCapacity / designCapacity * 100, 2);
+                            batteryHealth = "Battery health: " + batteryHealthPercentage + "%";
+                        }
+                    }
+
+                    File.WriteAllText(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + @"\System Report.txt", $"======System Report======\n\n{cpuName}\n{gpuName}\n{ramInfo}\n{storageSize}\n{batteryHealth}");
+                    didSystemReport = true;
+                    systemReportLocation = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + @"\System Report.txt";
+                    progressBar.Value += 100 / (driversCount + appsCount + postAppsCount);
+                }
+
+                if (tasks["Post-applications"].FirstOrDefault(x => x.name == "Cleanup").isSelected == true)
+                {
+                    nowInstallingLabel.Content = "We are now cleaning up.";
+                    await Delay(1000);
+                    Process process = new Process();
+                    process.StartInfo.FileName = "netsh";
+                    process.StartInfo.Arguments = "wlan delete profile name=\"SST-External\"";
+                    process.StartInfo.RedirectStandardOutput = true;
+                    process.StartInfo.UseShellExecute = false;
+                    process.StartInfo.CreateNoWindow = true;
+                    process.Start();
+                    process.WaitForExit();
+                    Process process2 = new Process();
+                    process2.StartInfo.FileName = "netsh";
+                    process2.StartInfo.Arguments = "wlan delete profile name=\"SGBono Internal\"";
+                    process2.StartInfo.RedirectStandardOutput = true;
+                    process2.StartInfo.UseShellExecute = false;
+                    process2.StartInfo.CreateNoWindow = true;
+                    process2.Start();
+                    process2.WaitForExit();
+                    Process process4 = new Process();
+                    process4.StartInfo.FileName = "cmd.exe";
+                    process4.StartInfo.Arguments = "/c net use /delete Z:";
+                    process4.StartInfo.RedirectStandardOutput = true;
+                    process4.StartInfo.UseShellExecute = false;
+                    process4.StartInfo.CreateNoWindow = true;
+                    process4.Start();
+                    process4.WaitForExit();
+                    if (Directory.Exists(@"C:\SGBono"))
+                    {
+                        Directory.Delete(@"C:\SGBono", true);
+                        while (Directory.Exists(@"C:\SGBono"))
+                        {
+                            await Delay(500);
+                        }
+                    }
+                    if (Directory.Exists(@"C:\Windows\System32\oobe\Automation"))
+                    {
+                        Directory.Delete(@"C:\Windows\System32\oobe\Automation", true);
+                        while (Directory.Exists(@"C:\Windows\System32\oobe\Automation"))
+                        {
+                            await Delay(500);
+                        }
+                    }
+                }
+
                 return 0;
             }
             catch (Exception ex)
