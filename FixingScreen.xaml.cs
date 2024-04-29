@@ -558,29 +558,35 @@ namespace beforewindeploy_custom_recovery
 
                     //Storage
                     DriveInfo mainDrive = new DriveInfo(System.IO.Path.GetPathRoot(Environment.GetFolderPath(Environment.SpecialFolder.System)));
-                    var totalsize = mainDrive.TotalSize / 1024 / 1024 / 1024;
+                    var totalsize = mainDrive.TotalSize / 1000 / 1000 / 1000;
                     storageSize = "Storage on Windows drive: " + totalsize + "GB";
                     await Delay(200);
 
                     //Battery health
-                    ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_Battery");
-                    ManagementObjectSearcher searcher = new ManagementObjectSearcher(query);
+                    ManagementObjectSearcher batteryStaticData = new ManagementObjectSearcher("root/WMI", "SELECT * FROM BatteryStaticData");
+                    ManagementObjectSearcher batteryFullChargedCapacity = new ManagementObjectSearcher("root/WMI", "SELECT * FROM BatteryFullChargedCapacity");
+                    
                     int designCapacity = 0;
                     int fullChargeCapacity = 0;
-                    foreach (ManagementObject queryObj in searcher.Get())
-                    {
-                        designCapacity = Convert.ToInt32(queryObj["DesignCapacity"]);
-                        fullChargeCapacity = Convert.ToInt32(queryObj["FullChargeCapacity"]);
 
-                        if (designCapacity == 0 || fullChargeCapacity == 0)
-                        {
-                            batteryHealth = "Battery health: No battery detected";
-                        }
-                        else
-                        {
-                            double batteryHealthPercentage = Math.Round((double)fullChargeCapacity / designCapacity * 100, 0);
-                            batteryHealth = "Battery health: " + batteryHealthPercentage + "%";
-                        }
+                    foreach (ManagementObject queryObj in batteryStaticData.Get())
+                    {
+                        designCapacity = Convert.ToInt32(queryObj["DesignedCapacity"]);
+                    }
+
+                    foreach (ManagementObject queryObj in batteryFullChargedCapacity.Get())
+                    {
+                        fullChargeCapacity = Convert.ToInt32(queryObj["FullChargedCapacity"]);
+                    }
+
+                    if (designCapacity == 0 || fullChargeCapacity == 0)
+                    {
+                        batteryHealth = "Battery health: No battery detected";
+                    }
+                    else
+                    {
+                        double batteryHealthPercentage = Math.Round((double)fullChargeCapacity / designCapacity * 100, 1);
+                        batteryHealth = "Battery health: " + batteryHealthPercentage + "%";
                     }
 
                     File.WriteAllText(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + @"\System Report.txt", $"======System Report======\n\n<Note the following down>\n{cpuName}\n{gpuName}\n{ramInfo}\n{storageSize}\n{batteryHealth}\n\n<Additional information>\nOriginal battery capacity: {Math.Round((double)designCapacity / 1000)}Wh\nFull charge capacity: {Math.Round((double)fullChargeCapacity / 1000)}Wh");
