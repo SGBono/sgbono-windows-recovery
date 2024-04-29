@@ -569,14 +569,20 @@ namespace beforewindeploy_custom_recovery
                     int designCapacity = 0;
                     int fullChargeCapacity = 0;
 
-                    foreach (ManagementObject queryObj in batteryStaticData.Get())
+                    try
                     {
-                        designCapacity = Convert.ToInt32(queryObj["DesignedCapacity"]);
-                    }
+                        foreach (ManagementObject queryObj in batteryStaticData.Get())
+                        {
+                            designCapacity = Convert.ToInt32(queryObj["DesignedCapacity"]);
+                        }
 
-                    foreach (ManagementObject queryObj in batteryFullChargedCapacity.Get())
+                        foreach (ManagementObject queryObj in batteryFullChargedCapacity.Get())
+                        {
+                            fullChargeCapacity = Convert.ToInt32(queryObj["FullChargedCapacity"]);
+                        }
+                    } catch
                     {
-                        fullChargeCapacity = Convert.ToInt32(queryObj["FullChargedCapacity"]);
+                        batteryHealth = "Battery health: No battery detected";
                     }
 
                     if (designCapacity == 0 || fullChargeCapacity == 0)
@@ -645,7 +651,7 @@ namespace beforewindeploy_custom_recovery
             }
             catch (Exception ex)
             {
-                ErrorScreen errorScreen = new ErrorScreen("There was an error in the post-applications install phase. \n" + ex.Message);
+                ErrorScreen errorScreen = new ErrorScreen($"There was an error in the post-applications install phase. \n{ex.Message}");
                 this.Visibility = Visibility.Visible;
                 grid.Visibility = Visibility.Collapsed;
                 frame.Content = errorScreen;

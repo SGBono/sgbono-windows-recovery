@@ -47,7 +47,7 @@
                     <CheckBox x:Name="systemReportCheckbox" Content="System Report" Margin="0,0,0,0" FontFamily="Segoe UI Variable Text" IsChecked="True" Checked="systemReportCheckbox_Checked" Unchecked="systemReportCheckbox_Unchecked"/>
                 </TreeView>
             </ListBox>
-        <Label x:Name="etaLabel" Content="Estimated time required: 5 min" Margin="40,0,0,165" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontFamily="Segoe UI Variable Text"/>
+        <Label x:Name="etaLabel" Content="Estimated time required: 5 min" Margin="40,0,0,165" HorizontalAlignment="Left" VerticalAlignment="Bottom" Visibility="Collapsed" FontFamily="Segoe UI Variable Text"/>
         <Label x:Name="onlineOfflineLabel" Content="OS Recovery will attempt to download required files from the server." Margin="40,0,0,140" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontFamily="Segoe UI Variable Text"/>
         <CheckBox x:Name="cleanupCheckbox" Content="Clean up all setup files when complete" VerticalAlignment="Bottom" Margin="40,0,0,100" FontFamily="Segoe UI Variable Text" IsChecked="True" Checked="cleanupCheckbox_Checked" Unchecked="cleanupCheckbox_Unchecked"/>
         <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,0,55" Height="42">
