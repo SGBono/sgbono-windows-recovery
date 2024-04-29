@@ -154,7 +154,7 @@ namespace beforewindeploy_custom_recovery
                     await Task.Run(() =>
                     {
                         XDocument serverCredentials = XDocument.Load(@"Credentials.xml");
-                        var serverCredential = serverCredentials.Root.Elements().First();
+                        var serverCredential = serverCredentials.Root;
                         var serverUsername = serverCredential.Element("Username").Value;
                         var serverPassword = serverCredential.Element("Password").Value;
                         Process mountNetworkDrive = new Process();
@@ -178,8 +178,25 @@ namespace beforewindeploy_custom_recovery
                         driverInstallServer.UseShellExecute = false;
                         driverInstallServer.WorkingDirectory = @"Z:";
 
-                        Process.Start(driverInstallServer).WaitForExit();
+                        Process.Start(driverInstallServer);
                     });
+                    await Delay(10000);
+                    try
+                    {
+                        await Task.Run(() =>
+                        {
+                            Process sdiProcess = Process.GetProcessesByName("SDI_x64_R2309").FirstOrDefault();
+                            sdiProcess.WaitForExit();
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        ErrorScreen errorScreen = new ErrorScreen("An error occurred while installing drivers. \n" + ex.Message);
+                        this.Visibility = Visibility.Visible;
+                        grid.Visibility = Visibility.Collapsed;
+                        frame.Content = errorScreen;
+                        return 1;
+                    }
                 }
                 else
                 {
@@ -235,11 +252,12 @@ namespace beforewindeploy_custom_recovery
                     }
                 }
                 progressBar.Value += 100 / (driversCount + appsCount + postAppsCount);
+                await Delay(1000);
                 return 0;
             }
             catch (Exception ex)
             {
-                ErrorScreen errorScreen = new ErrorScreen("There was an error in the drivers installation phase. \n" + ex.Message);
+                ErrorScreen errorScreen = new ErrorScreen($"There was an error in the drivers installation phase. \n{ex.Message}\n{ex.StackTrace}");
                 this.Visibility = Visibility.Visible;
                 grid.Visibility = Visibility.Collapsed;
                 frame.Content = errorScreen;
@@ -560,12 +578,12 @@ namespace beforewindeploy_custom_recovery
                         }
                         else
                         {
-                            double batteryHealthPercentage = Math.Round((double)fullChargeCapacity / designCapacity * 100, 2);
+                            double batteryHealthPercentage = Math.Round((double)fullChargeCapacity / designCapacity * 100, 0);
                             batteryHealth = "Battery health: " + batteryHealthPercentage + "%";
                         }
                     }
 
-                    File.WriteAllText(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + @"\System Report.txt", $"======System Report======\n\n{cpuName}\n{gpuName}\n{ramInfo}\n{storageSize}\n{batteryHealth}");
+                    File.WriteAllText(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + @"\System Report.txt", $"======System Report======\n\n<Note the following down>\n{cpuName}\n{gpuName}\n{ramInfo}\n{storageSize}\n{batteryHealth}\n\n<Additional information>\nOriginal battery capacity: {Math.Round((double)designCapacity / 1000)}Wh\nFull charge capacity: {Math.Round((double)fullChargeCapacity / 1000)}Wh");
                     didSystemReport = true;
                     systemReportLocation = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + @"\System Report.txt";
                     progressBar.Value += 100 / (driversCount + appsCount + postAppsCount);

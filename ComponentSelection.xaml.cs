@@ -190,11 +190,6 @@ namespace beforewindeploy_custom_recovery
                     }
                 }
 
-                if (driversPresent == true)
-                {
-                    ApplicationsRoot.Items.Remove(driversCheckbox);
-                }
-
                 //Check if software is present on USB
                 // !!IMPORTANT!! - Change start character from C to D before deployment
                 for (char c = 'C'; c <= 'Z'; c++)
@@ -205,12 +200,28 @@ namespace beforewindeploy_custom_recovery
                         {
                             onlineOfflineLabel.Content = "OS Recovery will use files available on this drive.";
                             localDriveLetter = c;
+                            if (driversPresent == true)
+                            {
+                                ApplicationsRoot.Items.Remove(driversCheckbox);
+                            } else
+                            {
+                                FixTask taskInfo = new FixTask("Drivers", false);
+                                tasks.Add("Drivers", new List<FixTask> { taskInfo });
+                            }
                             break;
                         }
                         else if (c == 'Z')
                         {
                             if (await FallbackToOnline() == 1) throw new Exception("Stop execution");
                             isOnline = true;
+                            if (driversPresent == true)
+                            {
+                                ApplicationsRoot.Items.Remove(driversCheckbox);
+                            } else
+                            {
+                                FixTask taskInfo = new FixTask("Drivers", false);
+                                tasks.Add("Drivers", new List<FixTask> { taskInfo });
+                            }
                         }
                     }
                     catch
@@ -219,6 +230,14 @@ namespace beforewindeploy_custom_recovery
                         {
                             if (await FallbackToOnline() == 1) throw new Exception("Stop execution");
                             isOnline = true;
+                            if (driversPresent == true)
+                            {
+                                ApplicationsRoot.Items.Remove(driversCheckbox);
+                            } else
+                            {
+                                FixTask taskInfo = new FixTask("Drivers", false);
+                                tasks.Add("Drivers", new List<FixTask> {taskInfo} );
+                            }
                         }
                     }
                 }
