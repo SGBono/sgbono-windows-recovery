@@ -195,7 +195,7 @@ namespace beforewindeploy_custom_recovery
 
                 //Check if software is present on USB
                 // !!IMPORTANT!! - Change start character from C to D before deployment
-                for (char c = 'C'; c <= 'Z'; c++)
+                for (char c = 'D'; c <= 'Z'; c++)
                 {
                     try
                     {
