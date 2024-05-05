@@ -45,73 +45,76 @@ namespace beforewindeploy_custom_recovery
             await Task.Delay(ms);
         }
 
-        private void ConnectToWiFi()
+        private async Task ConnectToWiFi()
         {
-            bool networkDone = false;
-            while (networkDone == false)
+            await Task.Run(async () =>
             {
-                try
+                bool networkDone = false;
+                while (networkDone == false)
                 {
-                    using (Process process = new Process())
+                    try
                     {
-                        ProcessStartInfo startInfo = new ProcessStartInfo
+                        using (Process process = new Process())
                         {
-                            FileName = "netsh",
-                            RedirectStandardInput = true,
-                            RedirectStandardOutput = true,
-                            CreateNoWindow = true,
-                            UseShellExecute = false,
-                            RedirectStandardError = true
-                        };
-
-                        process.StartInfo = startInfo;
-                        process.Start();
-                        Directory.CreateDirectory(@"C:\SGBono\Windows 11 Debloated");
-                        File.WriteAllText(@"C:\SGBono\Windows 11 Debloated\SGBono Internal.xml", Properties.Resources.SGBono);
-                        process.StandardInput.WriteLine("wlan add profile filename=\"C:\\SGBono\\Windows 11 Debloated\\SGBono Internal.xml\"");
-                        process.StandardInput.WriteLine($"wlan connect name=\"SGBono Internal\" ssid=\"SGBono Internal\" interface=\"Wi-Fi\"");
-                        process.StandardInput.Close();
-
-                        ProcessStartInfo connectInfo = new ProcessStartInfo
-                        {
-                            FileName = "netsh",
-                            Arguments = "wlan connect name=\"SGBono Internal\"",
-                            RedirectStandardOutput = true,
-                            RedirectStandardError = true,
-                            UseShellExecute = false,
-                            CreateNoWindow = true
-                        };
-
-                        Process connectProcess = new Process { StartInfo = connectInfo };
-                        connectProcess.Start();
-                        connectProcess.WaitForExit();
-
-                        /*int attempts = 0;
-                        while (!await IsWiFiConnected())
-                        {
-                            if (attempts == 31)
+                            ProcessStartInfo startInfo = new ProcessStartInfo
                             {
-                                throw new Exception("The network connection timed out.");
-                            }
-                            else
-                            {
-                                await Delay(500);
-                                attempts++;
-                            }
-                        }*/
+                                FileName = "netsh",
+                                RedirectStandardInput = true,
+                                RedirectStandardOutput = true,
+                                CreateNoWindow = true,
+                                UseShellExecute = false,
+                                RedirectStandardError = true
+                            };
 
-                        process.WaitForExit();
-                        break;
+                            process.StartInfo = startInfo;
+                            process.Start();
+                            Directory.CreateDirectory(@"C:\SGBono\Windows 11 Debloated");
+                            File.WriteAllText(@"C:\SGBono\Windows 11 Debloated\SGBono Internal.xml", Properties.Resources.SGBono);
+                            process.StandardInput.WriteLine("wlan add profile filename=\"C:\\SGBono\\Windows 11 Debloated\\SGBono Internal.xml\"");
+                            process.StandardInput.WriteLine($"wlan connect name=\"SGBono Internal\" ssid=\"SGBono Internal\" interface=\"Wi-Fi\"");
+                            process.StandardInput.Close();
+
+                            ProcessStartInfo connectInfo = new ProcessStartInfo
+                            {
+                                FileName = "netsh",
+                                Arguments = "wlan connect name=\"SGBono Internal\"",
+                                RedirectStandardOutput = true,
+                                RedirectStandardError = true,
+                                UseShellExecute = false,
+                                CreateNoWindow = true
+                            };
+
+                            Process connectProcess = new Process { StartInfo = connectInfo };
+                            connectProcess.Start();
+                            connectProcess.WaitForExit();
+
+                            int attempts = 0;
+                            while (!await IsWiFiConnected())
+                            {
+                                if (attempts == 31)
+                                {
+                                    throw new Exception("The network connection timed out.");
+                                }
+                                else
+                                {
+                                    await Delay(500);
+                                    attempts++;
+                                }
+                            }
+
+                            process.WaitForExit();
+                            break;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ErrorScreen errorScreen = new ErrorScreen(ex.Message);
+                        this.Visibility = Visibility.Visible;
+                        grid.Visibility = Visibility.Collapsed;
+                        frame.Content = errorScreen;
                     }
                 }
-                catch (Exception ex)
-                {
-                    ErrorScreen errorScreen = new ErrorScreen(ex.Message);
-                    this.Visibility = Visibility.Visible;
-                    grid.Visibility = Visibility.Collapsed;
-                    frame.Content = errorScreen;
-                }
-            }
+            });
         }
 
         public ComponentSelection()
@@ -203,7 +206,8 @@ namespace beforewindeploy_custom_recovery
                             if (driversPresent == true)
                             {
                                 ApplicationsRoot.Items.Remove(driversCheckbox);
-                            } else
+                            }
+                            else
                             {
                                 FixTask taskInfo = new FixTask("Drivers", false);
                                 tasks.Add("Drivers", new List<FixTask> { taskInfo });
@@ -217,7 +221,8 @@ namespace beforewindeploy_custom_recovery
                             if (driversPresent == true)
                             {
                                 ApplicationsRoot.Items.Remove(driversCheckbox);
-                            } else
+                            }
+                            else
                             {
                                 FixTask taskInfo = new FixTask("Drivers", false);
                                 tasks.Add("Drivers", new List<FixTask> { taskInfo });
@@ -233,10 +238,11 @@ namespace beforewindeploy_custom_recovery
                             if (driversPresent == true)
                             {
                                 ApplicationsRoot.Items.Remove(driversCheckbox);
-                            } else
+                            }
+                            else
                             {
                                 FixTask taskInfo = new FixTask("Drivers", false);
-                                tasks.Add("Drivers", new List<FixTask> {taskInfo} );
+                                tasks.Add("Drivers", new List<FixTask> { taskInfo });
                             }
                         }
                     }
@@ -380,23 +386,23 @@ namespace beforewindeploy_custom_recovery
         {
             try
             {
-                ConnectToWiFi();
+                await ConnectToWiFi();
                 XDocument credentials = XDocument.Load(@"Credentials.xml");
                 var credential = credentials.Root;
                 var username = credential.Element("Username").Value;
                 var password = credential.Element("Password").Value;
-                await Task.Run(() =>
-                {
-                    Process mountNetworkDrive = new Process();
-                    mountNetworkDrive.StartInfo.FileName = "net.exe";
-                    mountNetworkDrive.StartInfo.Arguments = $@"use Y: \\SGBonoServ\Software /user:{username} {password}";
-                    mountNetworkDrive.StartInfo.UseShellExecute = false;
-                    mountNetworkDrive.StartInfo.RedirectStandardOutput = true;
-                    mountNetworkDrive.StartInfo.CreateNoWindow = true;
-                    mountNetworkDrive.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                    mountNetworkDrive.Start();
-                    mountNetworkDrive.WaitForExit();
-                });
+                //await Task.Run(() =>
+                //{
+                Process mountNetworkDrive = new Process();
+                mountNetworkDrive.StartInfo.FileName = "net.exe";
+                mountNetworkDrive.StartInfo.Arguments = $@"use Y: \\SGBonoServ\Software /user:{username} {password}";
+                mountNetworkDrive.StartInfo.UseShellExecute = false;
+                mountNetworkDrive.StartInfo.RedirectStandardOutput = true;
+                mountNetworkDrive.StartInfo.CreateNoWindow = true;
+                mountNetworkDrive.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                mountNetworkDrive.Start();
+                mountNetworkDrive.WaitForExit();
+                //});
                 if (!File.Exists(@"Y:\ProgramsList.xml")) throw new Exception("You do not have the required files locally and the server is unreachable.");
                 return 0;
             }
