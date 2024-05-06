@@ -391,18 +391,18 @@ namespace beforewindeploy_custom_recovery
                 var credential = credentials.Root;
                 var username = credential.Element("Username").Value;
                 var password = credential.Element("Password").Value;
-                //await Task.Run(() =>
-                //{
-                Process mountNetworkDrive = new Process();
-                mountNetworkDrive.StartInfo.FileName = "net.exe";
-                mountNetworkDrive.StartInfo.Arguments = $@"use Y: \\SGBonoServ\Software /user:{username} {password}";
-                mountNetworkDrive.StartInfo.UseShellExecute = false;
-                mountNetworkDrive.StartInfo.RedirectStandardOutput = true;
-                mountNetworkDrive.StartInfo.CreateNoWindow = true;
-                mountNetworkDrive.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                mountNetworkDrive.Start();
-                mountNetworkDrive.WaitForExit();
-                //});
+                await Task.Run(() =>
+                {
+                    Process mountNetworkDrive = new Process();
+                    mountNetworkDrive.StartInfo.FileName = "net.exe";
+                    mountNetworkDrive.StartInfo.Arguments = $@"use Y: \\SGBonoServ\Software /user:{username} {password}";
+                    mountNetworkDrive.StartInfo.UseShellExecute = false;
+                    mountNetworkDrive.StartInfo.RedirectStandardOutput = true;
+                    mountNetworkDrive.StartInfo.CreateNoWindow = true;
+                    mountNetworkDrive.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                    mountNetworkDrive.Start();
+                    mountNetworkDrive.WaitForExit();
+                });
                 if (!File.Exists(@"Y:\ProgramsList.xml")) throw new Exception("You do not have the required files locally and the server is unreachable.");
                 return 0;
             }
