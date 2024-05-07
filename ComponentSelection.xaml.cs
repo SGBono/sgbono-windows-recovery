@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Management;
 using System.Net.NetworkInformation;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -19,12 +20,16 @@ namespace beforewindeploy_custom_recovery
     /// </summary>
     public partial class ComponentSelection : Page
     {
+        // Load credentials from XML file
+        private static XDocument credentials = XDocument.Load(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + @"\Credentials.xml");
+
+        // Determines if device has successfully connected to Wi-Fi by pinging local IP
         static async Task<bool> IsWiFiConnected()
         {
             try
             {
                 Ping ping = new Ping();
-                PingReply reply = await ping.SendPingAsync("192.168.0.1");
+                PingReply reply = await ping.SendPingAsync(credentials.Root.Element("Router").Element("AddressToPing").Value);
                 if (reply.Status == IPStatus.Success)
                 {
                     return true;
@@ -45,6 +50,7 @@ namespace beforewindeploy_custom_recovery
             await Task.Delay(ms);
         }
 
+        // Connects to Wi-Fi using netsh
         private async Task ConnectToWiFi()
         {
             await Task.Run(async () =>
@@ -68,16 +74,32 @@ namespace beforewindeploy_custom_recovery
 
                             process.StartInfo = startInfo;
                             process.Start();
+
+                            // Create temp directory and write WiFiTemplate.xml
                             Directory.CreateDirectory(@"C:\SGBono\Windows 11 Debloated");
-                            File.WriteAllText(@"C:\SGBono\Windows 11 Debloated\SGBono Internal.xml", Properties.Resources.SGBono);
-                            process.StandardInput.WriteLine("wlan add profile filename=\"C:\\SGBono\\Windows 11 Debloated\\SGBono Internal.xml\"");
-                            process.StandardInput.WriteLine($"wlan connect name=\"SGBono Internal\" ssid=\"SGBono Internal\" interface=\"Wi-Fi\"");
+                            File.WriteAllText(@"C:\SGBono\Windows 11 Debloated\WiFiTemplate.xml", Properties.Resources.WiFiTemplate);
+
+                            // Get reference values from Credentials.xml
+                            var ssid = credentials.Root.Element("Router").Element("SSID").Value;
+                            var routerpassword = credentials.Root.Element("Router").Element("Password").Value;
+                            var securityprotocol = credentials.Root.Element("Router").Element("SecurityProtocol").Value;
+
+                            // Writes reference values to WiFiTemplate.xml
+                            XDocument wifiTemplate = XDocument.Load(@"C:\SGBono\Windows 11 Debloated\WiFiTemplate.xml");
+                            wifiTemplate.Root.Element("name").Value = ssid;
+                            wifiTemplate.Root.Element("SSIDConfig").Element("SSID").Element("name").Value = ssid;
+                            wifiTemplate.Root.Element("MSM").Element("security").Element("sharedKey").Element("keyMaterial").Value = routerpassword;
+                            wifiTemplate.Root.Element("MSM").Element("security").Element("authEncryption").Element("authentication").Value = securityprotocol;
+                            wifiTemplate.Save(@"C:\SGBono\Windows 11 Debloated\WiFiTemplate.xml");
+
+                            // Connect to network by importing WiFiTemplate.xml
+                            process.StandardInput.WriteLine("wlan add profile filename=\"C:\\SGBono\\Windows 11 Debloated\\WiFiTemplate.xml\"");
                             process.StandardInput.Close();
 
                             ProcessStartInfo connectInfo = new ProcessStartInfo
                             {
                                 FileName = "netsh",
-                                Arguments = "wlan connect name=\"SGBono Internal\"",
+                                Arguments = $"wlan connect name=\"{ssid}\"",
                                 RedirectStandardOutput = true,
                                 RedirectStandardError = true,
                                 UseShellExecute = false,
@@ -126,6 +148,7 @@ namespace beforewindeploy_custom_recovery
             Main2();
         }
 
+        // Class to store tasks
         public class FixTask
         {
             public readonly string id;
@@ -145,7 +168,9 @@ namespace beforewindeploy_custom_recovery
 
         public static bool isOnline = false;
 
-        /**
+        /** Sample mapping of tasks dictionary
+         * 
+         * 
          * {
          *      "Drivers": [
          *          FixTask("Drivers")
@@ -173,6 +198,7 @@ namespace beforewindeploy_custom_recovery
         private bool thatWasMe = false;
 
 
+        // Main function to check for drivers and applications
         private async void Main2()
         {
             try
@@ -193,12 +219,13 @@ namespace beforewindeploy_custom_recovery
                     }
                 }
 
-                //Check if software is present on USB
+                // Check if software is present on USB
                 // !!IMPORTANT!! - Change start character from C to D before deployment
                 for (char c = 'D'; c <= 'Z'; c++)
                 {
                     try
                     {
+                        // If this directory exists, automatically assumed that the files are available on the drive
                         if (Directory.Exists(c + @":\Software"))
                         {
                             onlineOfflineLabel.Content = "OS Recovery will use files available on this drive.";
@@ -251,6 +278,7 @@ namespace beforewindeploy_custom_recovery
             }
             catch (Exception ex)
             {
+                // Dummy try-catch block to stop code execution if an error occurs inside FallbackToOnline()
                 if (ex.Message == "Stop execution")
                 {
                     return;
@@ -282,6 +310,7 @@ namespace beforewindeploy_custom_recovery
 
             XDocument programsList = XDocument.Load(path);
 
+            // Iterate through each program in ProgramsList.xml and check if it is installed
             List<FixTask> applicationsTaskList = new List<FixTask>();
             foreach (var element in programsList.Root.Elements())
             {
@@ -289,6 +318,7 @@ namespace beforewindeploy_custom_recovery
                 string programName = element.Element("name").Value;
                 bool isProgramFound = false;
 
+                // HKLM Uninstall Key
                 foreach (var subkeyName in uninstallKey.GetSubKeyNames())
                 {
                     using (var subKey = uninstallKey.OpenSubKey(subkeyName))
@@ -298,7 +328,7 @@ namespace beforewindeploy_custom_recovery
                         {
                             isProgramFound = true;
                             break;
-                        }
+                        } // Check for programs with (Part 2) in their name (eg. Microsoft Teams Part 2)
                         else if (displayName.Contains(programName.Replace(" (Part 2)", "")))
                         {
                             isProgramFound = true;
@@ -307,6 +337,7 @@ namespace beforewindeploy_custom_recovery
                     }
                 }
 
+                // HKCU Uninstall Key
                 foreach (var subkeyName in uninstallKeyUser.GetSubKeyNames())
                 {
                     using (var subKey = uninstallKeyUser.OpenSubKey(subkeyName))
@@ -316,7 +347,7 @@ namespace beforewindeploy_custom_recovery
                         {
                             isProgramFound = true;
                             break;
-                        }
+                        } // Check for programs with (Part 2) in their name (eg. Microsoft Teams Part 2)
                         else if (displayName.Contains(programName.Replace(" (Part 2)", "")))
                         {
                             isProgramFound = true;
@@ -327,6 +358,8 @@ namespace beforewindeploy_custom_recovery
 
                 if (!isProgramFound)
                 {
+                    // If program is not found, add it to the list of tasks
+                    // Dynamically create a checkbox for the program
                     CheckBox checkBox = new CheckBox
                     {
                         Content = programName,
@@ -382,12 +415,14 @@ namespace beforewindeploy_custom_recovery
 
         }
 
+        // Fallback to online mode if local files are not found
+        // Returns 0 if successful, 1 if unsuccessful
         private async Task<int> FallbackToOnline()
         {
             try
             {
+                // Connect to Wi-Fi and mount network drive
                 await ConnectToWiFi();
-                XDocument credentials = XDocument.Load(@"Credentials.xml");
                 var credential = credentials.Root;
                 var username = credential.Element("Username").Value;
                 var password = credential.Element("Password").Value;
@@ -395,7 +430,7 @@ namespace beforewindeploy_custom_recovery
                 {
                     Process mountNetworkDrive = new Process();
                     mountNetworkDrive.StartInfo.FileName = "net.exe";
-                    mountNetworkDrive.StartInfo.Arguments = $@"use Y: \\SGBonoServ\Software /user:{username} {password}";
+                    mountNetworkDrive.StartInfo.Arguments = $@"use Y: \\{credentials.Root.Element("VNCPath").Value}\Software /user:{username} {password}";
                     mountNetworkDrive.StartInfo.UseShellExecute = false;
                     mountNetworkDrive.StartInfo.RedirectStandardOutput = true;
                     mountNetworkDrive.StartInfo.CreateNoWindow = true;
@@ -455,6 +490,7 @@ namespace beforewindeploy_custom_recovery
             }
         }
 
+        // thatWasMe exists because the CheckBox_Checked() function is called when the checkbox is checked programmatically
         private void CheckBox_Checked()
         {
             if (thatWasMe == true)
@@ -484,6 +520,7 @@ namespace beforewindeploy_custom_recovery
             }
         }
 
+        // Handling checkings for Applications checkbox
         private void applicationsCheckbox_Checked(object sender, RoutedEventArgs e)
         {
             if (tasks.ContainsKey("Applications"))

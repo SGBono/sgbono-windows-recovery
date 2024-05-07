@@ -63,10 +63,10 @@ namespace beforewindeploy_custom_recovery.Properties {
         /// <summary>
         ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot;?&gt;
         ///&lt;WLANProfile xmlns=&quot;http://www.microsoft.com/networking/WLAN/profile/v1&quot;&gt;
-        ///	&lt;name&gt;SGBono Internal&lt;/name&gt;
+        ///	&lt;name&gt;&lt;/name&gt;
         ///	&lt;SSIDConfig&gt;
         ///		&lt;SSID&gt;
-        ///			&lt;name&gt;SGBono Internal&lt;/name&gt;
+        ///			&lt;name&gt;&lt;/name&gt;
         ///		&lt;/SSID&gt;
         ///	&lt;/SSIDConfig&gt;
         ///	&lt;connectionType&gt;ESS&lt;/connectionType&gt;
@@ -74,16 +74,17 @@ namespace beforewindeploy_custom_recovery.Properties {
         ///	&lt;MSM&gt;
         ///		&lt;security&gt;
         ///			&lt;authEncryption&gt;
-        ///				&lt;authentication&gt;WPA2PSK&lt;/authentication&gt;
+        ///				&lt;authentication&gt;&lt;/authentication&gt;
         ///				&lt;encryption&gt;AES&lt;/encryption&gt;
         ///				&lt;useOneX&gt;false&lt;/useOneX&gt;
         ///			&lt;/authEncryption&gt;
         ///			&lt;sharedKey&gt;
-        ///				&lt;keyType&gt;passPhrase&lt;/key [rest of string was truncated]&quot;;.
+        ///				&lt;keyType&gt;passPhrase&lt;/keyType&gt;
+        ///				&lt;protected&gt;false&lt;/protecte [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string SGBono {
+        internal static string WiFiTemplate {
             get {
-                return ResourceManager.GetString("SGBono", resourceCulture);
+                return ResourceManager.GetString("WiFiTemplate", resourceCulture);
             }
         }
     }
