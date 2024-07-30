@@ -85,11 +85,12 @@ namespace beforewindeploy_custom_recovery
                             var securityprotocol = credentials.Root.Element("Router").Element("SecurityProtocol").Value;
 
                             // Writes reference values to WiFiTemplate.xml
+                            XNamespace xmlNamespace = "http://www.microsoft.com/networking/WLAN/profile/v1";
                             XDocument wifiTemplate = XDocument.Load(@"C:\SGBono\Windows 11 Debloated\WiFiTemplate.xml");
-                            wifiTemplate.Root.Element("name").Value = ssid;
-                            wifiTemplate.Root.Element("SSIDConfig").Element("SSID").Element("name").Value = ssid;
-                            wifiTemplate.Root.Element("MSM").Element("security").Element("sharedKey").Element("keyMaterial").Value = routerpassword;
-                            wifiTemplate.Root.Element("MSM").Element("security").Element("authEncryption").Element("authentication").Value = securityprotocol;
+                            wifiTemplate.Root.Element(xmlNamespace + "name").Value = ssid;
+                            wifiTemplate.Root.Element(xmlNamespace + "SSIDConfig").Element(xmlNamespace + "SSID").Element(xmlNamespace + "name").Value = ssid;
+                            wifiTemplate.Root.Element(xmlNamespace + "MSM").Element(xmlNamespace + "security").Element(xmlNamespace + "sharedKey").Element(xmlNamespace + "keyMaterial").Value = routerpassword;
+                            wifiTemplate.Root.Element(xmlNamespace + "MSM").Element(xmlNamespace + "security").Element(xmlNamespace + "authEncryption").Element(xmlNamespace + "authentication").Value = securityprotocol;
                             wifiTemplate.Save(@"C:\SGBono\Windows 11 Debloated\WiFiTemplate.xml");
 
                             // Connect to network by importing WiFiTemplate.xml
@@ -130,10 +131,13 @@ namespace beforewindeploy_custom_recovery
                     }
                     catch (Exception ex)
                     {
-                        ErrorScreen errorScreen = new ErrorScreen(ex.Message);
-                        this.Visibility = Visibility.Visible;
-                        grid.Visibility = Visibility.Collapsed;
-                        frame.Content = errorScreen;
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            ErrorScreen errorScreen = new ErrorScreen(ex.Message + ex.StackTrace);
+                            this.Visibility = Visibility.Visible;
+                            grid.Visibility = Visibility.Collapsed;
+                            frame.Content = errorScreen;
+                        });
                     }
                 }
             });

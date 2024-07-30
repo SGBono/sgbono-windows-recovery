@@ -14,6 +14,7 @@
     <None Remove="grinning_face_3d.png" />
     <None Remove="red_exclamation_mark_3d.png" />
     <None Remove="SGBono.xml" />
+    <None Remove="WiFiTemplate.xml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -45,6 +46,7 @@
     <Resource Include="grinning_face_3d.png" />
     <Resource Include="red_exclamation_mark_3d.png" />
     <Resource Include="SGBono.xml" />
+    <Resource Include="WiFiTemplate.xml" />
   </ItemGroup>
 
   <ItemGroup>
