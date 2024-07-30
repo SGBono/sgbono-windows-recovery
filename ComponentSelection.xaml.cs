@@ -133,7 +133,7 @@ namespace beforewindeploy_custom_recovery
                     {
                         Application.Current.Dispatcher.Invoke(() =>
                         {
-                            ErrorScreen errorScreen = new ErrorScreen(ex.Message + ex.StackTrace);
+                            ErrorScreen errorScreen = new ErrorScreen(ex.Message);
                             this.Visibility = Visibility.Visible;
                             grid.Visibility = Visibility.Collapsed;
                             frame.Content = errorScreen;
