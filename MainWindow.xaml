@@ -8,7 +8,7 @@
         ui:WindowHelper.UseModernWindowStyle="True"
         ui:TitleBar.IsIconVisible="True"
         mc:Ignorable="d"
-        Title="OS Recovery" Height="600" Width="800" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+        Title="OS Recovery" Height="600" Width="800" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" MinHeight="600" MinWidth="800">
     <Grid>
         <Grid x:Name="LoadingScreen">
             <Label Content="Internal Build" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,20,20,0" FontSize="20" Foreground="Red" FontFamily="Segoe UI Variable Display"/>
