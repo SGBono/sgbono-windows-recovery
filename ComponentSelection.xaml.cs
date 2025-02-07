@@ -23,13 +23,13 @@ namespace beforewindeploy_custom_recovery
         // Load credentials from XML file
         private static XDocument credentials = XDocument.Load(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + @"\Credentials.xml");
 
-        // Determines if device has successfully connected to Wi-Fi by pinging local IP
+        // Determines if device has successfully connected to Wi-Fi by pinging destination server
         static async Task<bool> IsWiFiConnected()
         {
             try
             {
                 Ping ping = new Ping();
-                PingReply reply = await ping.SendPingAsync(credentials.Root.Element("Router").Element("AddressToPing").Value);
+                PingReply reply = await ping.SendPingAsync(credentials.Root.Element("VNCPath").Value);
                 if (reply.Status == IPStatus.Success)
                 {
                     return true;
@@ -43,11 +43,6 @@ namespace beforewindeploy_custom_recovery
             {
                 return false;
             }
-        }
-
-        private async Task Delay(int ms)
-        {
-            await Task.Delay(ms);
         }
 
         // Connects to Wi-Fi using netsh
@@ -114,13 +109,13 @@ namespace beforewindeploy_custom_recovery
                             int attempts = 0;
                             while (!await IsWiFiConnected())
                             {
-                                if (attempts == 31)
+                                if (attempts == 11)
                                 {
                                     throw new Exception("The network connection timed out.");
                                 }
                                 else
                                 {
-                                    await Delay(500);
+                                    await Task.Delay(500);
                                     attempts++;
                                 }
                             }
@@ -207,77 +202,87 @@ namespace beforewindeploy_custom_recovery
         {
             try
             {
-                await Delay(500);
-                //GPU driver detection (Assuming that if GPU driver is present, all drivers are present)
-                bool driversPresent = true;
-                using (var searcher1 = new ManagementObjectSearcher("select * from Win32_VideoController"))
+                await Task.Run(async () =>
                 {
-                    foreach (ManagementObject obj in searcher1.Get())
+                    await Task.Delay(500);
+                    // GPU driver detection (Assuming that if GPU driver is present, all drivers are present)
+                    bool driversPresent = true;
+                    await Task.Run(() =>
                     {
-                        if (obj["Name"].ToString() == "Microsoft Basic Display Adapter")
+                        using (var searcher1 = new ManagementObjectSearcher("select * from Win32_VideoController"))
                         {
-                            driversCheckbox.Visibility = Visibility.Visible;
-                            driversPresent = false;
-                            break;
+                            foreach (ManagementObject obj in searcher1.Get())
+                            {
+                                if (obj["Name"].ToString() == "Microsoft Basic Display Adapter")
+                                {
+                                    Application.Current.Dispatcher.Invoke(() => driversCheckbox.Visibility = Visibility.Visible);
+                                    driversPresent = false;
+                                    break;
+                                }
+                            }
                         }
-                    }
-                }
+                    });
 
-                // Check if software is present on USB
-                // !!IMPORTANT!! - Change start character from C to D before deployment
-                for (char c = 'D'; c <= 'Z'; c++)
-                {
-                    try
+                    // Check if software is present on USB
+                    // !!IMPORTANT!! - Change start character from C to D before deployment
+
+                    for (char c = 'D'; c <= 'Z'; c++)
                     {
-                        // If this directory exists, automatically assumed that the files are available on the drive
-                        if (Directory.Exists(c + @":\Software"))
+                        try
                         {
-                            onlineOfflineLabel.Content = "OS Recovery will use files available on this drive.";
-                            localDriveLetter = c;
-                            if (driversPresent == true)
+                            // If this directory exists, automatically assumed that the files are available on the drive
+                            if (Directory.Exists(c + @":\Software"))
                             {
-                                ApplicationsRoot.Items.Remove(driversCheckbox);
+                                Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    onlineOfflineLabel.Content = "OS Recovery will use files available on this drive.";
+                                    localDriveLetter = c;
+                                    if (driversPresent == true)
+                                    {
+                                        ApplicationsRoot.Items.Remove(driversCheckbox);
+                                    }
+                                    else
+                                    {
+                                        FixTask taskInfo = new FixTask("Drivers", false);
+                                        tasks.Add("Drivers", new List<FixTask> { taskInfo });
+                                    }
+                                });
+                                break;
                             }
-                            else
+                            else if (c == 'Z')
                             {
-                                FixTask taskInfo = new FixTask("Drivers", false);
-                                tasks.Add("Drivers", new List<FixTask> { taskInfo });
+                                if (await FallbackToOnline() == 1) throw new Exception("Stop execution");
+                                isOnline = true;
+                                if (driversPresent == true)
+                                {
+                                    Application.Current.Dispatcher.Invoke(() => ApplicationsRoot.Items.Remove(driversCheckbox));
+                                }
+                                else
+                                {
+                                    FixTask taskInfo = new FixTask("Drivers", false);
+                                    tasks.Add("Drivers", new List<FixTask> { taskInfo });
+                                }
                             }
-                            break;
                         }
-                        else if (c == 'Z')
+                        catch
                         {
-                            if (await FallbackToOnline() == 1) throw new Exception("Stop execution");
-                            isOnline = true;
-                            if (driversPresent == true)
+                            if (c == 'Z')
                             {
-                                ApplicationsRoot.Items.Remove(driversCheckbox);
-                            }
-                            else
-                            {
-                                FixTask taskInfo = new FixTask("Drivers", false);
-                                tasks.Add("Drivers", new List<FixTask> { taskInfo });
+                                if (await FallbackToOnline() == 1) throw new Exception("Stop execution");
+                                isOnline = true;
+                                if (driversPresent == true)
+                                {
+                                    Application.Current.Dispatcher.Invoke(() => ApplicationsRoot.Items.Remove(driversCheckbox));
+                                }
+                                else
+                                {
+                                    FixTask taskInfo = new FixTask("Drivers", false);
+                                    tasks.Add("Drivers", new List<FixTask> { taskInfo });
+                                }
                             }
                         }
                     }
-                    catch
-                    {
-                        if (c == 'Z')
-                        {
-                            if (await FallbackToOnline() == 1) throw new Exception("Stop execution");
-                            isOnline = true;
-                            if (driversPresent == true)
-                            {
-                                ApplicationsRoot.Items.Remove(driversCheckbox);
-                            }
-                            else
-                            {
-                                FixTask taskInfo = new FixTask("Drivers", false);
-                                tasks.Add("Drivers", new List<FixTask> { taskInfo });
-                            }
-                        }
-                    }
-                }
+                });
                 ApplicationsCheck();
             }
             catch (Exception ex)
@@ -289,11 +294,14 @@ namespace beforewindeploy_custom_recovery
                 }
                 else
                 {
-                    ErrorScreen errorScreen = new ErrorScreen(ex.Message);
-                    this.Visibility = Visibility.Visible;
-                    grid.Visibility = Visibility.Collapsed;
-                    frame.Content = errorScreen;
-                    return;
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        ErrorScreen errorScreen = new ErrorScreen(ex.Message);
+                        this.Visibility = Visibility.Visible;
+                        grid.Visibility = Visibility.Collapsed;
+                        frame.Content = errorScreen;
+                        return;
+                    });
                 }
             }
         }

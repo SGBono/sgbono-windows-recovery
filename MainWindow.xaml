@@ -7,11 +7,11 @@
         xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
         ui:WindowHelper.UseModernWindowStyle="True"
         ui:TitleBar.IsIconVisible="True"
+        ui:WindowHelper.SystemBackdropType="Mica"
         mc:Ignorable="d"
         Title="OS Recovery" Height="600" Width="800" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" MinHeight="600" MinWidth="800">
     <Grid>
         <Grid x:Name="LoadingScreen">
-            <Label Content="Internal Build" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,20,20,0" FontSize="20" Foreground="Red" FontFamily="Segoe UI Variable Display"/>
             <Label x:Name="title" Content="Let's get your PC fixed" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="40,30,0,0" FontSize="28" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display"/>
             <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <ui:ProgressRing IsActive="True" Height="64" Width="64" Margin="0,0,0,20"/>

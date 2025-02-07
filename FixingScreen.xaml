@@ -6,12 +6,11 @@
       xmlns:local="clr-namespace:beforewindeploy_custom_recovery"
       xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
       mc:Ignorable="d"
-      Title="Beforewindeploy Recovery" MinHeight="600" MinWidth="800" Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
+      Title="Beforewindeploy Recovery" MinHeight="600" MinWidth="800">
 
     <Grid>
         <Frame x:Name="frame" NavigationUIVisibility="Hidden"/>
         <Grid x:Name="grid">
-            <Label Content="Internal Build" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,20,20,0" FontSize="20" Foreground="Red" FontFamily="Segoe UI Variable Display"/>
             <Label x:Name="title" Content="We're working on it..." HorizontalAlignment="Left" VerticalAlignment="Top" Margin="40,30,0,10" FontSize="28" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display"/>
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                 <ui:ProgressBar x:Name="progressBar" Width="180" Height="32" Value="70" Margin="0,0,0,20"/>
