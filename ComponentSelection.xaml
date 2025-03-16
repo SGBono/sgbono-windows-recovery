@@ -11,9 +11,9 @@
         <Frame x:Name="frame" NavigationUIVisibility="Hidden"/>
         <Grid x:Name="grid">
             <StackPanel Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Top">
-            <Label x:Name="title" Content="Let's get your PC fixed" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="40,30,0,10" FontSize="28" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display"/>
-            <Label x:Name="subtitle" Content="Select the components missing from this computer, then press Start to apply fixes." FontSize="14" FontFamily="Segoe UI Variable" Margin="40,0,0,0"/>
-        </StackPanel>
+                <Label x:Name="title" Content="Let's get your PC fixed" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="40,30,0,10" FontSize="28" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display"/>
+                <Label x:Name="subtitle" Content="Select the components missing from this computer, then press Start to apply fixes." FontSize="14" FontFamily="Segoe UI Variable" Margin="40,0,0,0"/>
+            </StackPanel>
             <ListBox x:Name="fixListBox" HorizontalAlignment="Center" VerticalAlignment="Top" MinWidth="720" Height="250" Margin="0,130,0,0"  Background="Transparent">
                 <ListBox.Resources>
                     <Style TargetType="ListBoxItem">
@@ -46,13 +46,13 @@
                     <CheckBox x:Name="systemReportCheckbox" Content="System Report" Margin="0,0,0,0" FontFamily="Segoe UI Variable Text" IsChecked="True" Checked="systemReportCheckbox_Checked" Unchecked="systemReportCheckbox_Unchecked"/>
                 </TreeView>
             </ListBox>
-        <Label x:Name="etaLabel" Content="Estimated time required: 5 min" Margin="40,0,0,165" HorizontalAlignment="Left" VerticalAlignment="Bottom" Visibility="Collapsed" FontFamily="Segoe UI Variable Text"/>
-        <Label x:Name="onlineOfflineLabel" Content="OS Recovery will attempt to download required files from the server." Margin="40,0,0,140" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontFamily="Segoe UI Variable Text"/>
-        <CheckBox x:Name="cleanupCheckbox" Content="Clean up all setup files when complete" VerticalAlignment="Bottom" Margin="40,0,0,100" FontFamily="Segoe UI Variable Text" IsChecked="True" Checked="cleanupCheckbox_Checked" Unchecked="cleanupCheckbox_Unchecked"/>
-        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,0,55" Height="42">
-            <Button x:Name="startButton" Content="Start" Width="120" Height="32" VerticalAlignment="Bottom" Margin="0,0,10,0" Style="{DynamicResource AccentButtonStyle}" FontFamily="Segoe UI Variable Text" Click="startButton_Click"/>
-            <Button x:Name="cancelButton" Content="Cancel" Width="120" Height="32" VerticalAlignment="Bottom" Margin="0,0,30,0" FontFamily="Segoe UI Variable Text" Click="cancelButton_Click"/>
-        </StackPanel>
+            <Label x:Name="etaLabel" Content="Estimated time required: 5 min" Margin="40,0,0,165" HorizontalAlignment="Left" VerticalAlignment="Bottom" Visibility="Collapsed" FontFamily="Segoe UI Variable Text"/>
+            <Label x:Name="onlineOfflineLabel" Content="OS Recovery will attempt to download required files from the server." Margin="40,0,0,140" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontFamily="Segoe UI Variable Text"/>
+            <CheckBox x:Name="cleanupCheckbox" Content="Clean up all setup files when complete" VerticalAlignment="Bottom" Margin="40,0,0,100" FontFamily="Segoe UI Variable Text" IsChecked="True" Checked="cleanupCheckbox_Checked" Unchecked="cleanupCheckbox_Unchecked"/>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,0,55" Height="42">
+                <Button x:Name="startButton" Content="Start" Width="120" Height="32" VerticalAlignment="Bottom" Margin="0,0,10,0" Style="{DynamicResource AccentButtonStyle}" FontFamily="Segoe UI Variable Text" Click="startButton_Click"/>
+                <Button x:Name="cancelButton" Content="Cancel" Width="120" Height="32" VerticalAlignment="Bottom" Margin="0,0,30,0" FontFamily="Segoe UI Variable Text" Click="cancelButton_Click"/>
+            </StackPanel>
         </Grid>
     </Grid>
 </Page>

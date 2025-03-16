@@ -128,10 +128,12 @@ namespace beforewindeploy_custom_recovery
                     {
                         Application.Current.Dispatcher.Invoke(() =>
                         {
-                            ErrorScreen errorScreen = new ErrorScreen(ex.Message);
+                            ErrorScreen errorScreen = new ErrorScreen($"An error occurred while attempting to connect to the network. {ex.Message}");
                             this.Visibility = Visibility.Visible;
                             grid.Visibility = Visibility.Collapsed;
                             frame.Content = errorScreen;
+                            var window = Window.GetWindow(this) as MainWindow;
+                            window.LoadingScreen.Visibility = Visibility.Collapsed;
                         });
                     }
                 }
@@ -308,8 +310,8 @@ namespace beforewindeploy_custom_recovery
 
         private void ApplicationsCheck()
         {
-            RegistryKey uninstallKey = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall");
-            RegistryKey uninstallKeyUser = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall");
+            RegistryKey uninstallKey = Registry.LocalMachine.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall");
+            RegistryKey uninstallKeyUser = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall");
             string path = "";
             if ((string)onlineOfflineLabel.Content == "OS Recovery will use files available on this drive.")
             {
@@ -385,6 +387,7 @@ namespace beforewindeploy_custom_recovery
                     {
                         tasks["Applications"].FirstOrDefault(x => x.id == id).isSelected = true;
                         CheckBox_Checked();
+                        thatWasMe = false;
                     };
 
                     checkBox.Unchecked += (object sender, RoutedEventArgs e) =>
@@ -394,6 +397,7 @@ namespace beforewindeploy_custom_recovery
                             tasks["Applications"].FirstOrDefault(x => x.id == id).isSelected = false;
                         }
                         CheckBox_Checked();
+                        thatWasMe = false;
                     };
 
                     TreeViewItem treeViewItem = new TreeViewItem();
@@ -507,7 +511,7 @@ namespace beforewindeploy_custom_recovery
         {
             if (thatWasMe == true)
             {
-                thatWasMe = false;
+                return;
             }
             else
             {
@@ -551,6 +555,7 @@ namespace beforewindeploy_custom_recovery
                         CheckBox checkBox = item.Header as CheckBox;
                         checkBox.IsChecked = true;
                     }
+                    thatWasMe = false;
                 }
             }
         }
